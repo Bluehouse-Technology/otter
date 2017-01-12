@@ -1,0 +1,4 @@
+[{<<"thrift">>,
+  {git,"https://github.com/rbkmoney/thrift_erlang.git",
+       {ref,"aca7fca9f1a7161a1324bf5b92f8402c90d0519e"}},
+  0}].
