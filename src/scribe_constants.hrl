@@ -5,5 +5,5 @@
 %%
 
 
--include("zipkin_dependencies_types.hrl").
+-include("scribe_types.hrl").
 

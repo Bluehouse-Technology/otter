@@ -5,9 +5,13 @@ all: compile
 compile:
 	@rebar3 compile
 
+shell:
+	@rebar3 shell
+
 compile_thrift:
 	@thrift -gen erl priv/zipkinCore.thrift
 	@thrift -gen erl priv/zipkinDependencies.thrift
+	@thrift -gen erl priv/scribe.thrift
 	@mv gen-erl/*.?rl src/
 	@rm -rf gen-erl
 
