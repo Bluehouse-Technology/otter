@@ -2,8 +2,30 @@
 %% with the binary protocol, suitable for sending/receiving spans
 %% on the zipkin interface.
 
+%% Sending is async, i.e.
+
 -module(otter_conn_zipkin).
 -compile(export_all).
+
+sup_init() ->
+    [
+        ets:new(
+            Tab,
+            [named_table, public, {Concurrency, true}]
+        ) ||
+        {Tab, Concurrency} <- [
+            {otter_zipkin_buffer1, write_concurrency},
+            {otter_zipkin_buffer2, write_concurrency},
+            {otter_zipkin_status, read_concurrency}
+        ]
+    ],
+    ets:insert(otter_zipkin_status, {current_buffer, otter_zipkin_buffer1}),
+    SendInterval = otter_config:read(zipkin_batch_interval_ms, 100),
+    timer:apply_interval(SendInterval, ?MODULE, send_buffer, []).
+
+send_span(Span) when is_map(Span)->
+    [{_, Buffer}] = ets:lookup(otter_zipkin_status, current_buffer),
+    ets:insert(Buffer, {maps:get(id, Span), Span}).
 
 send_spans(Spans) ->
     {ok, ZipkinURI} = otter_config:read(zipkin_collector_uri),
@@ -20,6 +42,35 @@ send_spans(ZipkinURI, Spans) ->
 
 encode_spans(Spans) ->
     encode_implicit_list({struct, [format_span(S) || S <- Spans]}).
+
+send_buffer() ->
+    [{_, Buffer}] = ets:lookup(otter_zipkin_status, current_buffer),
+    NewBuffer = case Buffer of
+        otter_zipkin_buffer1 ->
+            otter_zipkin_buffer2;
+        otter_zipkin_buffer2 ->
+            otter_zipkin_buffer1
+    end,
+    ets:insert(otter_zipkin_status, {current_buffer, NewBuffer}),
+    case ets:tab2list(Buffer) of
+        [] ->
+            ok;
+        Spans ->
+            ets:delete_all_objects(Buffer),
+            case send_spans([Span || {_, Span} <- Spans]) of
+                {ok, "202", _, _} ->
+                    otter_snap_count:snap(
+                        [?MODULE, send_spans, ok],
+                        [{spans, length(Spans)}]);
+                Error ->
+                    otter_snap_count:snap(
+                        [?MODULE, send_spans, failed],
+                        [
+                            {spans, length(Spans)},
+                            {error, Error}
+                        ])
+            end
+    end.
 
 format_span(Span) ->
     [

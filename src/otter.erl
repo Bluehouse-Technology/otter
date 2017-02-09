@@ -1,0 +1,146 @@
+%%% otter API
+-module(otter).
+-compile(export_all).
+
+-type time_us() :: integer().       % timestamp in microseconds
+-type text() :: binary() | list().
+-type trace_id() :: integer().
+-type span_id() :: integer().
+-type span() :: #{
+    timestamp => time_us(),         % timestamp of starting the span
+    trace_id => trace_id(),         % 64 bit integer trace id
+    name => binary() | list(),      % name of the span
+    id => span_id(),                % 64 bit integer span id
+    parent_id => span_id() | undefined, % 64 bit integer parent span id
+    tags => [{text(), text()}],     % span tags
+    logs => [{time_us(), text()}],  % span logs
+    duration => time_us()           % microseconds between span start/end
+}.
+
+%% ====================  SPAN process API  ======================
+%% This API uses the process dictionary to collect span information
+%% and can be used when all span tags an events happen in the same
+%% request handling process.
+
+-spec span_pstart(text()) -> ok.
+span_pstart(Name) ->
+    otter_span:pstart(Name).
+
+-spec span_pstart(text(), trace_id()) -> ok.
+span_pstart(Name, TraceId) ->
+    otter_span:pstart(Name, TraceId).
+
+-spec span_pstart(text(), trace_id(), span_id()) -> ok.
+span_pstart(Name, TraceId, ParentId) ->
+    otter_span:pstart(Name, TraceId, ParentId).
+
+-spec span_ptag(text(), text()) -> ok.
+span_ptag(Key, Value) ->
+    otter_span:ptag(Key, Value).
+
+-spec span_plog(text()) -> ok.
+span_plog(Text) ->
+    otter_span:plog(Text).
+
+-spec span_pend() -> ok.
+span_pend() ->
+    otter_span:pend().
+
+-spec span_pids() -> {trace_id(), span_id()}.
+span_pids() ->
+    otter_span:pget_ids().
+
+-spec span_pget() -> span().
+span_pget() ->
+    otter_span:pget_span().
+
+%% ====================  SPAN function API  ======================
+%% This API functions with passing around the Span in the function calls
+%% All of them return a Span structure (erlang map).
+
+-spec span_start(text()) -> span().
+span_start(Name) ->
+    otter_span:fstart(Name).
+
+-spec span_start(text(), integer()) -> span().
+span_start(Name, TraceId) ->
+    otter_span:fstart(Name, TraceId).
+
+-spec span_start(text(), integer(), integer()) -> span().
+span_start(Name, TraceId, ParentId) ->
+    otter_span:fstart(Name, TraceId, ParentId).
+
+-spec span_tag(span(), text(), text()) -> span().
+span_tag(Span, Key, Value) ->
+    otter_span:ftag(Span, Key, Value).
+
+-spec span_log(span(), text()) -> span().
+span_log(Span, Text) ->
+    otter_span:flog(Span, Text).
+
+-spec span_end(span()) -> ok.
+span_end(Span) ->
+    otter_span:fend(Span).
+
+-spec span_ids(span()) -> {trace_id(), span_id()}.
+span_ids(Span) ->
+    otter_span:fget_ids(Span).
+
+
+%% ========================  Snap/Count API  =========================
+%% When span_end/1 or span_pend/0 is called then the completed span is
+%% passed to a configurable filter. The filter can check the Span tags
+%% as well as the name and duration of the span and use the information
+%% to decide to send the Span to the trace collector (Zipkin supported)
+%% and/or increase counters based on values of the tags and store the
+%% last Span for the counters. This latter is particularly useful for
+%% troubleshooting e.g. error events when increase of the corresponding
+%% counter is noticed. These snapshots (referred as Snap) and counters
+%% can be retrieved, managed with this API
+
+-spec counter_list() -> [{list(), integer()}].
+counter_list() ->
+    otter_snap_count:list_counts().
+
+-spec counter_snap(list()) -> term().
+counter_snap(Key) ->
+    otter_snap_count:get_snap(Key).
+
+-spec counter_delete(list()) -> ok.
+counter_delete(Key) ->
+    otter_snap_count:delete_counter(Key).
+
+-spec counter_delete_all() -> ok.
+counter_delete_all() ->
+    otter_snap_count:delete_all_counters().
+
+
+%% ========================== Config API ============================
+%% The default implementation uses the application environment to
+%% store configuration. There is a simple wrapper module to interface
+%% with configuration store (otter_config). To implementat other config
+%% persistence, the module should be replaced with another one providing
+%% the same simple read/write API functions.
+%% WARNING : In the default implementation using the application
+%% environment the write function is NOT persistent. In case of node
+%% restart and/or application reload the configuration will be reset to
+%% whatever environment is defined in the release (sys) config or app
+%% file. There is an example configuration provided in the otter.app
+%% file as a reference.
+
+-spec config_list() -> term().
+config_list() ->
+    otter_config:list().
+
+-spec config_read(atom()) -> term().
+config_read(Key) ->
+    otter_config:read(Key).
+
+-spec config_read(atom(), term()) -> term().
+config_read(Key, Default) ->
+    otter_config:read(Key, Default).
+
+-spec config_write(atom(), term()) -> ok.
+config_write(Key, Value) ->
+    otter_config:write(Key, Value).
+

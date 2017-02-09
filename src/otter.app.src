@@ -5,11 +5,35 @@
   {mod, { otter_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    ibrowse
    ]},
-  {env,[]},
+  {env,[
+    {zipkin_collector_uri, "http://172.17.0.2:9411/api/v1/spans"},
+    {zipkin_batch_interval_ms, 100},
+    {zipkin_tag_host_ip, {127,0,0,1}},
+    {zipkin_tag_host_port, 0},
+    {zipkin_tag_host_service, "otter_test"},
+    {filter_rules, [
+        {
+            [
+                {value, "otter_span_name", "test"},
+                {greater, "otter_span_duration", 1000}
+            ],
+            [
+                {snap_count, [long_request], []},
+                send_to_zipkin
+            ]
+        },
+        {
+            [],
+            [
+                {snap_count, [span_processed], ["otter_span_name"]}
+            ]
+        }
+    ]}
+  ]},
   {modules, []},
-
   {maintainers, []},
   {licenses, []},
   {links, []}

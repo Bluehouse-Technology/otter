@@ -4,6 +4,8 @@
 -module(otter_config).
 -compile(export_all).
 
+list() ->
+    application:get_all_env(otter).
 
 read(Key) ->
     application:get_env(otter, Key).
