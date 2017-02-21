@@ -2,10 +2,11 @@
 %% with the binary protocol, suitable for sending/receiving spans
 %% on the zipkin interface.
 
-%% Sending is async, i.e.
+%% Sending is async
 
 -module(otter_conn_zipkin).
 -compile(export_all).
+-include("otter.hrl").
 
 sup_init() ->
     [
@@ -23,9 +24,9 @@ sup_init() ->
     SendInterval = otter_config:read(zipkin_batch_interval_ms, 100),
     timer:apply_interval(SendInterval, ?MODULE, send_buffer, []).
 
-send_span(Span) when is_map(Span)->
+send_span(Span) ->
     [{_, Buffer}] = ets:lookup(otter_zipkin_status, current_buffer),
-    ets:insert(Buffer, {maps:get(id, Span), Span}).
+    ets:insert(Buffer, Span).
 
 send_spans(Spans) ->
     {ok, ZipkinURI} = otter_config:read(zipkin_collector_uri),
@@ -57,7 +58,7 @@ send_buffer() ->
             ok;
         Spans ->
             ets:delete_all_objects(Buffer),
-            case send_spans([Span || {_, Span} <- Spans]) of
+            case send_spans(Spans) of
                 {ok, "202", _, _} ->
                     otter_snap_count:snap(
                         [?MODULE, send_spans, ok],
@@ -72,13 +73,22 @@ send_buffer() ->
             end
     end.
 
-format_span(Span) ->
+format_span(#span{
+    id = Id,
+    trace_id = TraceId,
+    name = Name,
+    parent_id = ParentId,
+    logs = Logs,
+    tags = Tags,
+    timestamp = Timestamp,
+    duration = Duration
+}) ->
     [
-        {1, i64, maps:get(trace_id, Span)},
-        {3, string, maps:get(name, Span)},
-        {4, i64, maps:get(id, Span)}
+        {1, i64, TraceId},
+        {3, string, otter_lib:to_bin(Name)},
+        {4, i64, Id}
     ] ++
-    case maps:get(parent_id, Span, undefined) of
+    case ParentId of
         undefined ->
             [];
         ParentId ->
@@ -87,21 +97,21 @@ format_span(Span) ->
     [
         {6, list, {
             struct,
-            format_annotations(maps:get(logs, Span, []))
+            format_annotations(Logs)
         }},
         {8, list, {
             struct,
-            format_binary_annotations(maps:get(tags, Span, []))
+            format_binary_annotations(Tags)
         }},
-        {10, i64, maps:get(timestamp, Span)},
-        {11, i64, maps:get(duration, Span)}
+        {10, i64, Timestamp},
+        {11, i64, Duration}
     ].
 
 format_annotations(Logs) ->
     [
         [
             {1, i64, Timestamp},
-            {2, string, Text}
+            {2, string, otter_lib:to_bin(Text)}
         ] ||
         {Timestamp, Text} <- Logs
     ].
@@ -110,7 +120,7 @@ format_annotations(Logs) ->
 %% at least 1 tag (binary annotation) and each tag needs a host section
 %% with a service name and IP/Port.
 format_binary_annotations([]) ->
-    format_binary_annotations([{"dummy_tag_for_zipkin", ""}]);
+    format_binary_annotations([{<<"dummy_tag_for_zipkin">>, <<"">>}]);
 format_binary_annotations(Tags) ->
     HostService = otter_config:read(
         zipkin_tag_host_service,
@@ -120,8 +130,8 @@ format_binary_annotations(Tags) ->
     HostPort = otter_config:read(zipkin_tag_host_port, 0),
     [
         [
-            {1, string, Key},
-            {2, string, Value},
+            {1, string, otter_lib:to_bin(Key)},
+            {2, string, otter_lib:to_bin(Value)},
             {3,i32,6},
             {4,struct, [
                 {1,i32, otter_lib:ip_to_i32(HostIP)},
@@ -285,27 +295,3 @@ map_type(struct)-> 12;
 map_type(map)   -> 13;
 map_type(set)   -> 14;
 map_type(list)  -> 15.
-
-
-send_test_span() ->
-    %% this IP is what zipking docker claims on my machine after following
-    %% the instructions on the frontpage of opentracing.io
-    send_spans("http://172.17.0.2:9411/api/v1/spans", [test_span()]).
-
-test_span() ->
-    TS = otter_lib:timestamp(),
-    #{
-        name => "test",
-        trace_id => 112,
-        id => 223,
-        tags => [
-            {"what", "this"},
-            {"yo", "yi"}
-        ],
-        logs => [
-            {TS-150, "1st log"},
-            {TS-50, "2nd log"}
-        ],
-        timestamp => TS-200,
-        duration => 5000
-    }.

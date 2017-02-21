@@ -1,5 +1,6 @@
 -module(otter_filter).
 -compile(export_all).
+-include("otter.hrl").
 
 %% The main idea behind this filter that the processing of the spans can
 %% be modified runtime by changing the filter configuration. This way
@@ -34,11 +35,8 @@
 %% external interface or dependent on environment (e.g. logging and trace
 %% collecting) should be done asynchronously.
 
-span(Span) ->
-    Rules = otter_config:read(filter_rules, [{[], [send_to_zipkin]}]),
-    Tags = maps:get(tags, Span),
-    Name = maps:get(name, Span),
-    Duration = maps:get(duration, Span),
+span(#span{tags = Tags, name = Name, duration = Duration} = Span) ->
+    Rules = otter_config:read(filter_rules, []),
     rules(Rules, [
         {"otter_span_name", Name},
         {"otter_span_duration", Duration}|
@@ -146,13 +144,3 @@ action({snap_count, Prefix, TagNames}, Tags, Span) ->
     Tags;
 action(_, Tags, _) ->
     Tags.
-
-
-
-
-
-
-
-
-
-

@@ -21,10 +21,14 @@ snap(Key, [{_, _} |_ ] = Data) ->
             ]
         }
     ),
-    ets:update_counter(otter_snap_count, Key, 1, {Key, 0});
+    case catch ets:update_counter(otter_snap_count, Key, 1) of
+        {'EXIT', {badarg, _}} ->
+            ets:insert(otter_snap_count, {Key, 1});
+        Cnt ->
+            Cnt
+    end;
 snap(Key, Data) ->
     snap(Key, [{data, Data}]).
-
 
 list_counts() ->
     ets:tab2list(otter_snap_count).

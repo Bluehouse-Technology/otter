@@ -1,5 +1,6 @@
 -module(otter_span).
 -compile(export_all).
+-include("otter.hrl").
 
 
 %% ====================  SPAN process API  ======================
@@ -15,37 +16,36 @@ pstart(Name, TraceId) ->
 
 pstart(Name, TraceId, ParentId) ->
     put(
-        otter_span_information, #{
-        timestamp => otter_lib:timestamp(),
-        trace_id => TraceId,
-        id => otter_lib:id(),
-        parent_id => ParentId,
-        name => Name
+        otter_span_information, #span{
+        timestamp = otter_lib:timestamp(),
+        trace_id = TraceId,
+        id = otter_lib:id(),
+        parent_id = ParentId,
+        name = Name
     }),
     ok.
 
 ptag(Key, Value) ->
     Span = get(otter_span_information),
-    Tags = maps:get(tags, Span, []),
-    put(otter_span_information, Span#{
-        tags => lists:keystore(Key, 1, Tags, {Key, Value})
+    Tags = Span#span.tags,
+    put(otter_span_information, Span#span{
+        tags = lists:keystore(Key, 1, Tags, {Key, Value})
     }),
     ok.
 
 plog(Text) ->
     Span = get(otter_span_information),
-    Logs = maps:get(logs, Span, []),
-    put(otter_span_information, Span#{
-        logs => Logs ++ [{otter_lib:timestamp(), Text}]
+    Logs = Span#span.logs,
+    put(otter_span_information, Span#span{
+        logs = Logs ++ [{otter_lib:timestamp(), Text}]
     }),
     ok.
 
 pend() ->
     Span = get(otter_span_information),
-    erase(otter_span_information),
-    Start = maps:get(timestamp, Span),
-    otter_filter:span(Span#{
-        duration => otter_lib:timestamp()-Start
+    Start = Span#span.timestamp,
+    otter_filter:span(Span#span{
+        duration = otter_lib:timestamp() - Start
     }),
     ok.
 
@@ -56,7 +56,7 @@ pend() ->
 %% above for the calling process, so they can be used in the handling of
 %% the call
 pget_ids() ->
-    #{trace_id := TraceId, id := Id} = get(otter_span_information),
+    #span{trace_id = TraceId, id = Id} = get(otter_span_information),
     {TraceId, Id}.
 
 pget_span() ->
@@ -70,33 +70,33 @@ fstart(Name) ->
 fstart(Name, TraceId) ->
     fstart(Name, TraceId, undefined).
 fstart(Name, TraceId, ParentId) ->
-    #{
-        timestamp => otter_lib:timestamp(),
-        trace_id => TraceId,
-        id => otter_lib:id(),
-        parent_id => ParentId,
-        name => Name
+    #span{
+        timestamp = otter_lib:timestamp(),
+        trace_id = TraceId,
+        id = otter_lib:id(),
+        parent_id = ParentId,
+        name = Name
     }.
 
 ftag(Span, Key, Value) ->
-    Tags = maps:get(tags, Span, []),
-    Span#{
-        tags => lists:keystore(Key, 1, Tags, {Key, Value})
+    Tags = Span#span.tags,
+    Span#span{
+        tags = lists:keystore(Key, 1, Tags, {Key, Value})
     }.
 
 flog(Span, Text) ->
-    Logs = maps:get(logs, Span, []),
-    Span#{
-        logs => Logs ++ [{otter_lib:timestamp(), Text}]
+    Logs = Span#span.logs,
+    Span#span{
+        logs = Logs ++ [{otter_lib:timestamp(), Text}]
     }.
 
 fend(Span) ->
-    Start = maps:get(timestamp, Span),
-    otter_filter:span(Span#{
-        duration => otter_lib:timestamp()-Start
+    Start = Span#span.timestamp,
+    otter_filter:span(Span#span{
+        duration = otter_lib:timestamp() - Start
     }),
     ok.
 
 fget_ids(Span) ->
-    #{trace_id := TraceId, id := Id} = Span,
+    #span{trace_id = TraceId, id = Id} = Span,
     {TraceId, Id}.

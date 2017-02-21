@@ -1,44 +1,30 @@
 %%% otter API
 -module(otter).
 -compile(export_all).
-
--type time_us() :: integer().       % timestamp in microseconds
--type text() :: binary() | list().
--type trace_id() :: integer().
--type span_id() :: integer().
--type span() :: #{
-    timestamp => time_us(),         % timestamp of starting the span
-    trace_id => trace_id(),         % 64 bit integer trace id
-    name => binary() | list(),      % name of the span
-    id => span_id(),                % 64 bit integer span id
-    parent_id => span_id() | undefined, % 64 bit integer parent span id
-    tags => [{text(), text()}],     % span tags
-    logs => [{time_us(), text()}],  % span logs
-    duration => time_us()           % microseconds between span start/end
-}.
+-include("otter.hrl").
 
 %% ====================  SPAN process API  ======================
 %% This API uses the process dictionary to collect span information
 %% and can be used when all span tags an events happen in the same
 %% request handling process.
 
--spec span_pstart(text()) -> ok.
+-spec span_pstart(info()) -> ok.
 span_pstart(Name) ->
     otter_span:pstart(Name).
 
--spec span_pstart(text(), trace_id()) -> ok.
+-spec span_pstart(info(), trace_id()) -> ok.
 span_pstart(Name, TraceId) ->
     otter_span:pstart(Name, TraceId).
 
--spec span_pstart(text(), trace_id(), span_id()) -> ok.
+-spec span_pstart(info(), trace_id(), span_id()) -> ok.
 span_pstart(Name, TraceId, ParentId) ->
     otter_span:pstart(Name, TraceId, ParentId).
 
--spec span_ptag(text(), text()) -> ok.
+-spec span_ptag(info(), info()) -> ok.
 span_ptag(Key, Value) ->
     otter_span:ptag(Key, Value).
 
--spec span_plog(text()) -> ok.
+-spec span_plog(info()) -> ok.
 span_plog(Text) ->
     otter_span:plog(Text).
 
@@ -58,23 +44,23 @@ span_pget() ->
 %% This API functions with passing around the Span in the function calls
 %% All of them return a Span structure (erlang map).
 
--spec span_start(text()) -> span().
+-spec span_start(info()) -> span().
 span_start(Name) ->
     otter_span:fstart(Name).
 
--spec span_start(text(), integer()) -> span().
+-spec span_start(info(), integer()) -> span().
 span_start(Name, TraceId) ->
     otter_span:fstart(Name, TraceId).
 
--spec span_start(text(), integer(), integer()) -> span().
+-spec span_start(info(), integer(), integer()) -> span().
 span_start(Name, TraceId, ParentId) ->
     otter_span:fstart(Name, TraceId, ParentId).
 
--spec span_tag(span(), text(), text()) -> span().
+-spec span_tag(span(), info(), info()) -> span().
 span_tag(Span, Key, Value) ->
     otter_span:ftag(Span, Key, Value).
 
--spec span_log(span(), text()) -> span().
+-spec span_log(span(), info()) -> span().
 span_log(Span, Text) ->
     otter_span:flog(Span, Text).
 
@@ -122,7 +108,7 @@ counter_delete_all() ->
 %% persistence, the module should be replaced with another one providing
 %% the same simple read/write API functions.
 %% WARNING : In the default implementation using the application
-%% environment the write function is NOT persistent. In case of node
+%% environment, so the write function is NOT persistent. In case of node
 %% restart and/or application reload the configuration will be reset to
 %% whatever environment is defined in the release (sys) config or app
 %% file. There is an example configuration provided in the otter.app
