@@ -12,12 +12,12 @@ sup_init() ->
     [
         ets:new(
             Tab,
-            [named_table, public, {Concurrency, true}]
+            [named_table, public | TableProps ]
         ) ||
-        {Tab, Concurrency} <- [
-            {otter_zipkin_buffer1, write_concurrency},
-            {otter_zipkin_buffer2, write_concurrency},
-            {otter_zipkin_status, read_concurrency}
+        {Tab, TableProps} <- [
+            {otter_zipkin_buffer1, [{write_concurrency, true}, {keypos, 2}]},
+            {otter_zipkin_buffer2, [{write_concurrency, true}, {keypos, 2}]},
+            {otter_zipkin_status,  [{read_concurrency, true}]}
         ]
     ],
     ets:insert(otter_zipkin_status, {current_buffer, otter_zipkin_buffer1}),
