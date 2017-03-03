@@ -3,6 +3,39 @@
 -compile(export_all).
 -include("otter.hrl").
 
+%% ====================  SPAN function API  ======================
+%% This API functions with passing around the Span in the function calls
+%% All of them return a Span structure (erlang map).
+
+-spec span_start(info()) -> span().
+span_start(Name) ->
+    otter_span:fstart(Name).
+
+-spec span_start(info(), integer()) -> span().
+span_start(Name, TraceId) ->
+    otter_span:fstart(Name, TraceId).
+
+-spec span_start(info(), integer(), integer()) -> span().
+span_start(Name, TraceId, ParentId) ->
+    otter_span:fstart(Name, TraceId, ParentId).
+
+-spec span_tag(span(), info(), info()) -> span().
+span_tag(Span, Key, Value) ->
+    otter_span:ftag(Span, Key, Value).
+
+-spec span_log(span(), info()) -> span().
+span_log(Span, Text) ->
+    otter_span:flog(Span, Text).
+
+-spec span_end(span()) -> ok.
+span_end(Span) ->
+    otter_span:fend(Span).
+
+-spec span_ids(span()) -> {trace_id(), span_id()}.
+span_ids(Span) ->
+    otter_span:fget_ids(Span).
+
+
 %% ====================  SPAN process API  ======================
 %% This API uses the process dictionary to collect span information
 %% and can be used when all span tags an events happen in the same
@@ -40,37 +73,6 @@ span_pids() ->
 span_pget() ->
     otter_span:pget_span().
 
-%% ====================  SPAN function API  ======================
-%% This API functions with passing around the Span in the function calls
-%% All of them return a Span structure (erlang map).
-
--spec span_start(info()) -> span().
-span_start(Name) ->
-    otter_span:fstart(Name).
-
--spec span_start(info(), integer()) -> span().
-span_start(Name, TraceId) ->
-    otter_span:fstart(Name, TraceId).
-
--spec span_start(info(), integer(), integer()) -> span().
-span_start(Name, TraceId, ParentId) ->
-    otter_span:fstart(Name, TraceId, ParentId).
-
--spec span_tag(span(), info(), info()) -> span().
-span_tag(Span, Key, Value) ->
-    otter_span:ftag(Span, Key, Value).
-
--spec span_log(span(), info()) -> span().
-span_log(Span, Text) ->
-    otter_span:flog(Span, Text).
-
--spec span_end(span()) -> ok.
-span_end(Span) ->
-    otter_span:fend(Span).
-
--spec span_ids(span()) -> {trace_id(), span_id()}.
-span_ids(Span) ->
-    otter_span:fget_ids(Span).
 
 
 %% ========================  Snap/Count API  =========================
