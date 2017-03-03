@@ -17,16 +17,16 @@
     {filter_rules, [
         {
             [
-                {greater, "otter_span_duration", 1000}
+                {greater, otter_span_duration, 1000}
             ],
             [
-                {snap_count, [long_span], ["otter_span_name"]}
+                {snapshot_count, [long_span], [otter_span_name]}
             ]
         },
         {
             [],
             [
-                {snap_count, [span_processed], ["otter_span_name"]},
+                {snapshot_count, [span_processed], [otter_span_name]},
                 send_to_zipkin
             ]
         }

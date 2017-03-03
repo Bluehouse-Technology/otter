@@ -7,7 +7,7 @@
 %% logging, counting or sending data to trace collectors can be modified
 %% on the running system based on the changing operational requirements.
 
-%% The span filter works with key value pair lists (easiest to implement)
+%% The span filter works with key value pair lists easiest to implement
 %% and reasonably fast.
 
 %% Filter rules are composed by a list of {Conditions, Actions} tuples.
@@ -38,8 +38,8 @@
 span(#span{tags = Tags, name = Name, duration = Duration} = Span) ->
     Rules = otter_config:read(filter_rules, []),
     rules(Rules, [
-        {"otter_span_name", Name},
-        {"otter_span_duration", Duration}|
+        {otter_span_name, Name},
+        {otter_span_duration, Duration}|
         Tags
     ], Span).
 
@@ -130,9 +130,9 @@ do_actions([], Tags, Span, continue) ->
     {continue, Tags, Span}.
 
 action(send_to_zipkin, Tags, Span) ->
-    otter_conn_zipkin:send_span(Span),
+    otter_conn_zipkin:store_span(Span),
     Tags;
-action({snap_count, Prefix, TagNames}, Tags, Span) ->
+action({snapshot_count, Prefix, TagNames}, Tags, Span) ->
     TagValues = [
         case lists:keyfind(Key, 1, Tags) of
             {Key, Value} -> Value;
@@ -140,7 +140,7 @@ action({snap_count, Prefix, TagNames}, Tags, Span) ->
         end ||
         Key <- TagNames
     ],
-    otter_snap_count:snap(Prefix ++ TagValues, Span),
+    otter_snapshot_count:snapshot(Prefix ++ TagValues, Span),
     Tags;
 action(_, Tags, _) ->
     Tags.

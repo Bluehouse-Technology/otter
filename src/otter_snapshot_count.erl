@@ -1,4 +1,4 @@
--module(otter_snap_count).
+-module(otter_snapshot_count).
 -compile(export_all).
 
 %% This module implements a simple way of giving operational visibility
@@ -8,11 +8,11 @@
 %% of 2 element {K,V} tuples, if it is any other format, it uses
 %% [{data, Data}] to store the last information.
 
-snap(Key, [{_, _} |_ ] = Data) ->
+snapshot(Key, [{_, _} |_ ] = Data) ->
     {_, _, Us} = os:timestamp(),
     {{Year, Month, Day}, {Hour, Min, Sec}} = calendar:local_time(),
     ets:insert(
-        otter_snap_store,
+        otter_snapshot_store,
         {
             Key,
             [
@@ -21,28 +21,28 @@ snap(Key, [{_, _} |_ ] = Data) ->
             ]
         }
     ),
-    case catch ets:update_counter(otter_snap_count, Key, 1) of
+    case catch ets:update_counter(otter_snapshot_count, Key, 1) of
         {'EXIT', {badarg, _}} ->
-            ets:insert(otter_snap_count, {Key, 1});
+            ets:insert(otter_snapshot_count, {Key, 1});
         Cnt ->
             Cnt
     end;
-snap(Key, Data) ->
-    snap(Key, [{data, Data}]).
+snapshot(Key, Data) ->
+    snapshot(Key, [{data, Data}]).
 
 list_counts() ->
-    ets:tab2list(otter_snap_count).
+    ets:tab2list(otter_snapshot_count).
 
 get_snap(Key) ->
-    ets:lookup(otter_snap_store, Key).
+    ets:lookup(otter_snapshot_store, Key).
 
 delete_counter(Key) ->
-    ets:delete(otter_snap_store, Key),
-    ets:delete(otter_snap_count, Key).
+    ets:delete(otter_snapshot_store, Key),
+    ets:delete(otter_snapshot_count, Key).
 
 delete_all_counters() ->
-    ets:delete_all_objects(otter_snap_store),
-    ets:delete_all_objects(otter_snap_count).
+    ets:delete_all_objects(otter_snapshot_store),
+    ets:delete_all_objects(otter_snapshot_count).
 
 sup_init() -> [
     ets:new(
@@ -50,8 +50,8 @@ sup_init() -> [
         [named_table, public, {Concurrency, true}]
     ) ||
     {Tab, Concurrency} <- [
-        {otter_snap_count, write_concurrency},
-        {otter_snap_store, write_concurrency}
+        {otter_snapshot_count, write_concurrency},
+        {otter_snapshot_store, write_concurrency}
     ]
 ].
 
