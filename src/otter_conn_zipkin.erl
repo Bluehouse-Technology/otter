@@ -24,25 +24,9 @@ sup_init() ->
     SendInterval = otter_config:read(zipkin_batch_interval_ms, 100),
     timer:apply_interval(SendInterval, ?MODULE, send_buffer, []).
 
-send_span(Span) ->
+store_span(Span) ->
     [{_, Buffer}] = ets:lookup(otter_zipkin_status, current_buffer),
     ets:insert(Buffer, Span).
-
-send_spans(Spans) ->
-    {ok, ZipkinURI} = otter_config:read(zipkin_collector_uri),
-    send_spans(ZipkinURI, Spans).
-
-send_spans(ZipkinURI, Spans) ->
-    Data = encode_spans(Spans),
-    ibrowse:send_req(
-        ZipkinURI,
-        [{"content-type", "application/x-thrift"}],
-        post,
-        Data
-    ).
-
-encode_spans(Spans) ->
-    encode_implicit_list({struct, [format_span(S) || S <- Spans]}).
 
 send_buffer() ->
     [{_, Buffer}] = ets:lookup(otter_zipkin_status, current_buffer),
@@ -58,20 +42,36 @@ send_buffer() ->
             ok;
         Spans ->
             ets:delete_all_objects(Buffer),
-            case send_spans(Spans) of
+            case send_batch_to_zipkin(Spans) of
                 {ok, "202", _, _} ->
-                    otter_snap_count:snap(
-                        [?MODULE, send_spans, ok],
+                    otter_snapshot_count:snapshot(
+                        [?MODULE, send_buffer, ok],
                         [{spans, length(Spans)}]);
                 Error ->
-                    otter_snap_count:snap(
-                        [?MODULE, send_spans, failed],
+                    otter_snapshot_count:snapshot(
+                        [?MODULE, send_buffer, failed],
                         [
                             {spans, length(Spans)},
                             {error, Error}
                         ])
             end
     end.
+
+send_batch_to_zipkin(Spans) ->
+    {ok, ZipkinURI} = otter_config:read(zipkin_collector_uri),
+    send_batch_to_zipkin(ZipkinURI, Spans).
+
+send_batch_to_zipkin(ZipkinURI, Spans) ->
+    Data = encode_spans(Spans),
+    ibrowse:send_req(
+        ZipkinURI,
+        [{"content-type", "application/x-thrift"}],
+        post,
+        Data
+    ).
+
+encode_spans(Spans) ->
+    encode_implicit_list({struct, [format_span(S) || S <- Spans]}).
 
 format_span(#span{
     id = Id,
