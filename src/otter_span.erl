@@ -24,10 +24,22 @@ ftag(Span, Key, Value) ->
         tags = lists:keystore(Key, 1, Tags, {Key, Value})
     }.
 
+ftag(Span, Key, Value, Service) ->
+    Tags = Span#span.tags,
+    Span#span{
+        tags = lists:keystore(Key, 1, Tags, {Key, Value, Service})
+    }.
+
 flog(Span, Text) ->
     Logs = Span#span.logs,
     Span#span{
         logs = [{otter_lib:timestamp(), Text} | Logs]
+    }.
+
+flog(Span, Text, Service) ->
+    Logs = Span#span.logs,
+    Span#span{
+        logs = [{otter_lib:timestamp(), Text, Service} | Logs]
     }.
 
 fend(Span) ->
@@ -63,9 +75,19 @@ ptag(Key, Value) ->
     put(otter_span_information, ftag(Span, Key, Value)),
     ok.
 
+ptag(Key, Value, Service) ->
+    Span = get(otter_span_information),
+    put(otter_span_information, ftag(Span, Key, Value, Service)),
+    ok.
+
 plog(Text) ->
     Span = get(otter_span_information),
     put(otter_span_information, flog(Span, Text)),
+    ok.
+
+plog(Text, Service) ->
+    Span = get(otter_span_information),
+    put(otter_span_information, flog(Span, Text, Service)),
     ok.
 
 pend() ->

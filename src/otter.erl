@@ -23,9 +23,18 @@ span_start(Name, TraceId, ParentId) ->
 span_tag(Span, Key, Value) ->
     otter_span:ftag(Span, Key, Value).
 
+-spec span_tag(span(), info(), info(), service()) -> span().
+span_tag(Span, Key, Value, Service) ->
+    otter_span:ftag(Span, Key, Value, Service).
+
+
 -spec span_log(span(), info()) -> span().
 span_log(Span, Text) ->
     otter_span:flog(Span, Text).
+
+-spec span_log(span(), info(), service()) -> span().
+span_log(Span, Text, Service) ->
+    otter_span:flog(Span, Text, Service).
 
 -spec span_end(span()) -> ok.
 span_end(Span) ->
@@ -57,9 +66,17 @@ span_pstart(Name, TraceId, ParentId) ->
 span_ptag(Key, Value) ->
     otter_span:ptag(Key, Value).
 
+-spec span_ptag(info(), info(), service()) -> ok.
+span_ptag(Key, Value, Service) ->
+    otter_span:ptag(Key, Value, Service).
+
 -spec span_plog(info()) -> ok.
 span_plog(Text) ->
     otter_span:plog(Text).
+
+-spec span_plog(info(), service()) -> ok.
+span_plog(Text, Service) ->
+    otter_span:plog(Text, Service).
 
 -spec span_pend() -> ok.
 span_pend() ->
@@ -88,19 +105,19 @@ span_pget() ->
 
 -spec counter_list() -> [{list(), integer()}].
 counter_list() ->
-    otter_snap_count:list_counts().
+    otter_snapshot_count:list_counts().
 
--spec counter_snap(list()) -> term().
-counter_snap(Key) ->
-    otter_snap_count:get_snap(Key).
+-spec counter_snapshot(list()) -> term().
+counter_snapshot(Key) ->
+    otter_snapshot_count:get_snap(Key).
 
 -spec counter_delete(list()) -> ok.
 counter_delete(Key) ->
-    otter_snap_count:delete_counter(Key).
+    otter_snapshot_count:delete_counter(Key).
 
 -spec counter_delete_all() -> ok.
 counter_delete_all() ->
-    otter_snap_count:delete_all_counters().
+    otter_snapshot_count:delete_all_counters().
 
 
 %% ========================== Config API ============================
