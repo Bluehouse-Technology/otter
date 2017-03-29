@@ -32,7 +32,7 @@ languages, platforms and protocols.
 The concept defined for trace production is based on a **span** which is
 essentially a record of a handling in one environment. A **span** has a
 **timestamp** of when it started, a **duration**, a list of timestamped
-events marking the timing important actions during the **span** and a
+events marking the timing of important actions during the **span** and a
 list of key-value tags storing the parameters of the handled request
 (e.g. customer ids, transaction ids, results of subsequent actions).
 The **span** also contains id's to aid their correlation. The
@@ -41,16 +41,16 @@ of one request received from different systems. The **trace_id** is
 generated in the first system which starts handling a request (e.g. a
 frontend) and supposed to be passed on to other systems involved in the
 processing the same request. This is fairly simple when the protocols
-are fully under control and extensible (which is very often not the case).
+are fully under control and extensible (e.g. HTTP).
 Other id's recorded are the **span_id** and a **parent_id** referring to
-the parent **span** that help showing a hierarchical relationship of
+the parent **span** to help showing a hierarchical relationship of
 the **span**s in the **trace collector**.
 
 After collecting this information, the **span** can be sent to a trace
-collector which then based on the id's of the received spans can
-correlate them and provide and end-to-end record of the request.
-sending all produced **span**s could generate significant additional
-load on the system producing them and also on the **trace collector**.
+collector, which based on the id's of the received spans can
+correlate them and provide and end-to-end view of the request.
+Sending all produced **span**s could generate significant additional
+load on the system that produces them and also on the **trace collector**.
 It is recommended to filter the the **span**s before sending them to the
 collector.
 
@@ -60,7 +60,7 @@ spans to Zipkin using the HTTP/Thrift binary protocol.
 
 The OpenTracing terminology defines information to be passed on across
 systems. The feasibility of this in most cases depends on the protocols
-used, and usually rather difficult to achieve. OTTER is not attempting to
+used, and sometimes rather difficult to achieve. OTTER is not attempting to
 implement any of this functionality. It is possible though to initialize
 a **span** in OTTER with a **trace_id** and **parent_id**, but how these
 id's are passed across the systems is left to the particular implementation.
@@ -68,7 +68,7 @@ id's are passed across the systems is left to the particular implementation.
 ## OTTER functionality
 
 OTTER helps producing span information, filtering spans, sending to
-trace collector (Zipkin), counting and keeping a snapshot of the last
+trace collector (Zipkin) and also counting and keeping a snapshot of the last
 occurrence of a span.
 
 
@@ -509,12 +509,13 @@ paramer, the Zipkin connector module (otter_conn_zipkin.erl) can be configured
 to add an extra tag to each span during encoding the span by setting the
 **zipkin_add_host_tag_to_span** in the configuration. The value of the
 parameter should  a tuple ```{Key, Value}``` which will be used as the
-default tag information.
+default tag information. OpenZipkin uses the "lc" (Local Component) tag
+to display the service for a span.
 
 example :
 
 ```erlang
-    {zipkin_add_host_tag_to_span, {"otter_host", ""}},
+    {zipkin_add_host_tag_to_span, {"lc", ""}},
 ```
 
 The default service/host information to be sent to zipkin is provided in
@@ -652,7 +653,7 @@ otter.app.src file.
     {zipkin_tag_host_ip, {127,0,0,1}},
     {zipkin_tag_host_port, 0},
     {zipkin_tag_host_service, "otter_test"},
-    {zipkin_add_host_tag_to_span, {"otter_host", ""}},
+    {zipkin_add_host_tag_to_span, {"lc", ""}},
     {zipkin_add_default_service_to_logs, false},
     {zipkin_add_default_service_to_tags, false},
     {server_zipkin_callback, {otter_server_span_cb, handle}},
