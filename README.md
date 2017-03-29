@@ -648,6 +648,7 @@ otter.app.src file.
 
 ```erlang
     ...
+    {http_client, ibrowse}, %% ibrowse | httpc
     {zipkin_collector_uri, "http://172.17.0.2:9411/api/v1/spans"},
     {zipkin_batch_interval_ms, 100},
     {zipkin_tag_host_ip, {127,0,0,1}},
