@@ -1,19 +1,24 @@
-.PHONY: all compile clean ct upgrade shell
+.PHONY: all compile clean ct upgrade shell distclean
+
+REBAR=rebar3
 
 all: compile
 
 compile:
-	@rebar3 compile
+	@${REBAR} compile
 
 shell:
-	@rebar3 shell
+	@${REBAR} shell
 
 ct: 
-	@rebar3 ct --sys_config test/test_httpc.config
-	@rebar3 ct --sys_config test/test_ibrowse.config
+	@${REBAR} ct --sys_config test/test_httpc.config
+	@${REBAR} ct --sys_config test/test_ibrowse.config
 
 clean:
-	@rebar3 clean
+	@${REBAR} clean
 
 upgrade:
-	@rebar3 upgrade
+	@${REBAR} upgrade
+
+distclean: clean
+	@rm -rf ./_build/ && rm -rf rebar.lock

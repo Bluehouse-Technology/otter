@@ -6,7 +6,8 @@
   {applications,
    [kernel,
     stdlib,
-    ibrowse
+    ibrowse,
+    cowboy
    ]},
   {env,[
     {http_client, ibrowse},
