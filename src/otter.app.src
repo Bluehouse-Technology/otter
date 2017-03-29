@@ -1,7 +1,7 @@
 {application, otter,
- [{description, "An OTP application"},
+ [{description, "Open Tracing Toolkit for ERlang"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [otter_sup, otter_snapshot_count]},
   {mod, { otter_app, []}},
   {applications,
    [kernel,
@@ -39,7 +39,7 @@
     ]}
   ]},
   {modules, []},
-  {maintainers, []},
-  {licenses, []},
-  {links, []}
+  {maintainers, ["Ferenc Holzhauser", "Chandrashekhar Mullaparthi"]},
+  {licenses, ["Apache"]},
+  {links, [{"Github", "https://github.com/bluehouse-technology/otter"}]}
  ]}.
