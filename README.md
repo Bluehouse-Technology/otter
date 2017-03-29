@@ -677,3 +677,10 @@ otter.app.src file.
     ...
 ```
 
+## Acknowledgements
+
+The development of ''otter'' was championed by [Holger Winkelmann](https://github.com/hwinkel) of [Travelping](https://github.com/travelping). Both [Travelping](https://github.com/travelping) and [bet365](http://bet365.com) kindly provided sponsorship for the initial development. The development was primarily done by [Ferenc Holzhauser](https://github.com/fholzhauser) with design input from [Chandru Mullaparthi](https://github.com/cmullaparthi).
+
+## License
+
+Apache 2.0
