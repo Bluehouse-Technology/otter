@@ -12,11 +12,11 @@ start_link() ->
 init([]) ->
     [M:sup_init() || M <- [otter_snapshot_count, otter_conn_zipkin]],
     ChildSpecs = case otter_config:read(server_zipkin_callback) of
-        {ok, {_CbMod, _CbFun}} ->
-            [cowboy_spec()];
-        _ ->
-            []
-    end,
+		     {ok, {_CbMod, _CbFun}} ->
+			 [cowboy_spec()];
+		     _ ->
+			 []
+		 end,
     {ok, { {one_for_all, 0, 1}, ChildSpecs} }.
 
 

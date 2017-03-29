@@ -1,15 +1,15 @@
 {application, otter,
- [{description, "An OTP application"},
+ [{description, "OpenTracing Toolkit for ERlang"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [otter_sup, otter_snapshot_count, otter_conn_zipkin]},
   {mod, { otter_app, []}},
   {applications,
    [kernel,
     stdlib,
-    ibrowse,
-    cowboy
+    ibrowse
    ]},
   {env,[
+    {http_client, ibrowse},
     {zipkin_collector_uri, "http://172.17.0.2:9411/api/v1/spans"},
     {zipkin_batch_interval_ms, 100},
     {zipkin_tag_host_ip, {127,0,0,1}},

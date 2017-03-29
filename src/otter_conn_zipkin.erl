@@ -43,7 +43,7 @@ send_buffer() ->
         Spans ->
             ets:delete_all_objects(Buffer),
             case send_batch_to_zipkin(Spans) of
-                {ok, "202", _, _} ->
+                {ok, 202} ->
                     otter_snapshot_count:snapshot(
                         [?MODULE, send_buffer, ok],
                         [{spans, length(Spans)}]);
@@ -58,17 +58,36 @@ send_buffer() ->
     end.
 
 send_batch_to_zipkin(Spans) ->
-    {ok, ZipkinURI} = otter_config:read(zipkin_collector_uri),
-    send_batch_to_zipkin(ZipkinURI, Spans).
+    {ok, ZipkinURL} = otter_config:read(zipkin_collector_uri),
+    send_batch_to_zipkin(ZipkinURL, Spans).
 
-send_batch_to_zipkin(ZipkinURI, Spans) ->
+send_batch_to_zipkin(ZipkinURL, Spans) ->
     Data = encode_spans(Spans),
-    ibrowse:send_req(
-        ZipkinURI,
+    send_spans_http(ZipkinURL, Data).
+
+send_spans_http(ZipkinURL, Data) ->
+    send_spans_http(application:get_env(otter, http_client, ibrowse),
+		    ZipkinURL, Data).
+
+send_spans_http(ibrowse, ZipkinURL, Data) ->
+    case ibrowse:send_req(
+        ZipkinURL,
         [{"content-type", "application/x-thrift"}],
         post,
         Data
-    ).
+     ) of
+	{ok, SCode, _, _} ->
+	    {ok, list_to_integer(SCode)};
+	Err ->
+	    Err
+    end;
+send_spans_http(httpc, ZipkinURL, Data) ->
+    case httpc:request(post, {ZipkinURL, [], "application/x-thrift", Data}, [], []) of
+	{ok, {{_, SCode, _}, _, _}} ->
+	    {ok, SCode};
+	Err ->
+	    Err
+    end.
 
 encode_spans(Spans) ->
     encode_implicit_list({struct, [span_to_struct(S) || S <- Spans]}).
