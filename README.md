@@ -2,6 +2,8 @@
 
 OpenTracing Toolkit for ERlang
 
+![otter logo](docs/images/otter_logo.png)
+
 ## Build
 
 OTTER uses [rebar3](http://www.rebar3.org) as build tool. It can be built
@@ -72,7 +74,7 @@ trace collector (Zipkin), counting and keeping a snapshot of the last
 occurrence of a span.
 
 
-![otter flow](otter_flow.png)
+![otter flow](docs/images/otter_flow.png)
 
 
 ### Producing span information
