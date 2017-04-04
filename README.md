@@ -119,46 +119,46 @@ proplists) then inserting the span information is more or less trivial.
 
 Start span with name only. Name should refer e.g. to the interface.
 ```erlang
--spec span_start(info()) -> span().
+-spec span_start(Name::info()) -> span().
 ```
 
 Start span with name and trace_id where trace_id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer()) -> span().
+-spec span_start(Name::info(), TraceId::integer()) -> span().
 ```
 
 Start span with name, trace_id and parent span id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer(), integer()) -> span().
+-spec span_start(Name::info(), TraceId::integer(), ParentId::integer()) -> span().
 ```
 
 Add a tag to the previously started span.
 ```erlang
--spec span_tag(span(), info(), info()) -> span().
+-spec span_tag(Span::span(), Key::info(), Value::info()) -> span().
 ```
 
 Add a tag to the previously started span with additional service information.
 ```erlang
--spec span_tag(span(), info(), info(), service()) -> span().
+-spec span_tag(Span::span(), Key::info(), Value::info(), Service::service()) -> span().
 ```
 
 Add a log/event to the previously started span
 ```erlang
--spec span_log(span(), info()) -> span().
+-spec span_log(Span::span(), Text::info()) -> span().
 ```
 
 Add a log/event to the previously started span with additional service information0
 ```erlang
--spec span_log(span(), info(), service()) -> span().
+-spec span_log(Span::span(), Text::info(), Service::service()) -> span().
 ```
 
 End span and invoke the span filter (see below)
 ```erlang
--spec span_end(span()) -> ok.
+-spec span_end(Span::span()) -> ok.
 ```
 
 Get span id's. Return the **trace_id** and the **span** id from the
@@ -199,43 +199,43 @@ This is probably the least work to implement in existing code.
 Start span with name only. Name should refer e.g. to the interface.
 
 ```erlang
--spec span_pstart(info()) -> ok.
+-spec span_pstart(Name::info()) -> ok.
 ```
 
 Start span with name and trace_id where trace_id e.g. received from
 protocol.
 
 ```erlang
--spec span_pstart(info(), trace_id()) -> ok.
+-spec span_pstart(Name::info(), TraceId::trace_id()) -> ok.
 ```
 
 Start span with name, trace_id and parent span id e.g. received from
 protocol.
 
 ```erlang
--spec span_pstart(info(), trace_id(), span_id()) -> ok.
+-spec span_pstart(Name::info(), TraceId::trace_id(), ParnetId::span_id()) -> ok.
 ```
 
 Add a tag to the previously started span.
 
 ```erlang
--spec span_ptag(info(), info()) -> ok.
+-spec span_ptag(Key::info(), Value::info()) -> ok.
 ```
 
 Add a tag to the previously started span with additional service information
 
 ```erlang
--spec span_ptag(info(), info(), service()) -> ok.
+-spec span_ptag(Key::info(), Value::info(), Service::service()) -> ok.
 ```
 
 Add a log/event to the previously started span
 ```erlang
--spec span_plog(info()) -> ok.
+-spec span_plog(Text::info()) -> ok.
 ```
 
 Add a log/event to the previously started span with additional service information
 ```erlang
--spec span_plog(info(), service()) -> ok.
+-spec span_plog(Text::info(), Service::service()) -> ok.
 ```
 
 
