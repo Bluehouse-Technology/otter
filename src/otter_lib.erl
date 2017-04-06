@@ -40,7 +40,7 @@ id() ->
 to_bin(Int) when is_integer(Int)->
     integer_to_binary(Int);
 to_bin(Atom) when is_atom(Atom) ->
-    list_to_binary(atom_to_list(Atom));
+    atom_to_binary(Atom, 'utf8');
 to_bin(List) when is_list(List) ->
     unicode:characters_to_binary(List);
 to_bin(Binary) when is_binary(Binary) ->
