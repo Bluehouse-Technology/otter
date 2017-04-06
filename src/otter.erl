@@ -34,36 +34,44 @@ span_start(Name) ->
     otter_span:fstart(Name).
 
 -spec span_start(info(), integer()) -> span().
-span_start(Name, TraceId) ->
+span_start(Name, TraceId)
+  when is_integer(TraceId) ->
     otter_span:fstart(Name, TraceId).
 
 -spec span_start(info(), integer(), integer()) -> span().
-span_start(Name, TraceId, ParentId) ->
+span_start(Name, TraceId, ParentId)
+  when is_integer(TraceId), is_integer(ParentId) ->
     otter_span:fstart(Name, TraceId, ParentId).
 
 -spec span_tag(span(), info(), info()) -> span().
-span_tag(Span, Key, Value) ->
+span_tag(Span, Key, Value)
+  when is_record(Span, span) ->
     otter_span:ftag(Span, Key, Value).
 
 -spec span_tag(span(), info(), info(), service()) -> span().
-span_tag(Span, Key, Value, Service) ->
+span_tag(Span, Key, Value, Service)
+  when is_record(Span, span) ->
     otter_span:ftag(Span, Key, Value, Service).
 
 
 -spec span_log(span(), info()) -> span().
-span_log(Span, Text) ->
+span_log(Span, Text)
+  when is_record(Span, span) ->
     otter_span:flog(Span, Text).
 
 -spec span_log(span(), info(), service()) -> span().
-span_log(Span, Text, Service) ->
+span_log(Span, Text, Service)
+  when is_record(Span, span) ->
     otter_span:flog(Span, Text, Service).
 
 -spec span_end(span()) -> ok.
-span_end(Span) ->
+span_end(Span)
+  when is_record(Span, span) ->
     otter_span:fend(Span).
 
 -spec span_ids(span()) -> {trace_id(), span_id()}.
-span_ids(Span) ->
+span_ids(Span)
+  when is_record(Span, span) ->
     otter_span:fget_ids(Span).
 
 
