@@ -80,6 +80,23 @@ fget_ids(Span) ->
 %% and can be used when all span tags an events happen in the same
 %% request handling process.
 
+-define(KEY, otter_span_information).
+
+
+
+-define(MAYBE_WITH_SPAN(Action),
+        case get(?KEY) of
+            undefined ->
+                ok;
+            Span ->
+                Action,
+                ok
+        end).
+
+-define(MAYBE_UPDATE_SPAN(Action),
+        ?MAYBE_WITH_SPAN(put(?KEY, Action))).
+
+
 pstart(Name) ->
     pstart(Name, otter_lib:id()).
 
@@ -87,32 +104,22 @@ pstart(Name, TraceId) ->
     pstart(Name, TraceId, undefined).
 
 pstart(Name, TraceId, ParentId) ->
-    put(otter_span_information, fstart(Name, TraceId, ParentId)),
-    ok.
+    fstart(Name, TraceId, ParentId).
 
 ptag(Key, Value) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, ftag(Span, Key, Value)),
-    ok.
+    ?MAYBE_UPDATE_SPAN(ftag(Span, Key, Value)).
 
 ptag(Key, Value, Service) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, ftag(Span, Key, Value, Service)),
-    ok.
+    ?MAYBE_UPDATE_SPAN(ftag(Span, Key, Value, Service)).
 
 plog(Text) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, flog(Span, Text)),
-    ok.
+    ?MAYBE_UPDATE_SPAN(flog(Span, Text)).
 
 plog(Text, Service) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, flog(Span, Text, Service)),
-    ok.
+    ?MAYBE_UPDATE_SPAN(flog(Span, Text, Service)).
 
 pend() ->
-    Span = get(otter_span_information),
-    fend(Span).
+    ?MAYBE_WITH_SPAN(fend(Span)).
 
 %% This call can be used to retrieve the IDs from the calling process
 %% e.g. when you have a gen_server and you get an API function call

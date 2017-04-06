@@ -108,7 +108,7 @@ span_pend() ->
 span_pids() ->
     otter_span:pget_ids().
 
--spec span_pget() -> span().
+-spec span_pget() -> span() | undefined.
 span_pget() ->
     otter_span:pget_span().
 
