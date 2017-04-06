@@ -34,8 +34,13 @@ span_start(Name) ->
     otter_span:fstart(Name).
 
 -spec span_start(info(), integer()) -> span().
-span_start(Name, TraceId) ->
-    otter_span:fstart(Name, TraceId).
+span_start(Name, TraceId)
+  when is_integer(TraceId) ->
+    otter_span:fstart(Name, TraceId);
+span_start(Name, ParentSpan)
+  when is_record(ParentSpan, span) ->
+    {TraceId, ParentId} = otter_span:fget_ids(ParentSpan),
+    otter_span:fstart(Name, TraceId, ParentId).
 
 -spec span_start(info(), integer(), integer()) -> span().
 span_start(Name, TraceId, ParentId) ->
