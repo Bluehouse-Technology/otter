@@ -136,6 +136,13 @@ protocol.
 -spec span_start(info(), integer(), integer()) -> span().
 ```
 
+Start span with name and parent span. trace_id and parent span id are
+extracted from the parent.
+
+```erlang
+-spec span_start(info(), ParentSpan :: span()) -> span().
+```
+
 Add a tag to the previously started span.
 ```erlang
 -spec span_tag(span(), info(), info()) -> span().
