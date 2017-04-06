@@ -88,7 +88,7 @@ The following type specifications are in otter.hrl
 
 ```erlang
 -type time_us() :: integer().           % timestamp in microseconds
--type info()    :: binary() | list() | atom() | integer().
+-type info()    :: binary() | iolist() | atom() | integer().
 -type ip4()     :: {integer(), integer(), integer(), integer()}.
 -type service() :: binary() | list() | default | {binary() | list(), ip4(), integer()}.
 -type trace_id():: integer().
@@ -287,8 +287,8 @@ example :
 
 A note on the tag key/value and log types: the Zipkin interface requires
 string types. The Zipkin connector module (otter_conn_zipkin.erl) attempts
-to convert: integer, atom, list types to binary. This allows using these
-data types too as keys, values and logs, however any other "non-obvious"
+to convert: integer, atom, and iolist types to binary. This allows using
+these data types too as keys, values and logs, however any other "non-obvious"
 types would still need conversion (or simply can not be used). The impact
 of having an incompatible type in the tag keys, values and logs will likely
 crash the encoding/sending function in the Zipkin connector module resulting

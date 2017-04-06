@@ -1,5 +1,5 @@
 -type time_us() :: integer().           % timestamp in microseconds
--type info()    :: binary() | list() | atom() | integer().
+-type info()    :: binary() | iolist() | atom() | integer().
 -type ip4()     :: {integer(), integer(), integer(), integer()}.
 -type service() :: binary() | list() | default | {binary() | list(), ip4(), integer()}.
 -type trace_id():: integer().
