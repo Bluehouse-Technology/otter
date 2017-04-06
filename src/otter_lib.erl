@@ -44,4 +44,6 @@ to_bin(Atom) when is_atom(Atom) ->
 to_bin(List) when is_list(List) ->
     unicode:characters_to_binary(List);
 to_bin(Binary) when is_binary(Binary) ->
-    Binary.
+    Binary;
+to_bin(Value) ->
+    unicode:characters_to_binary(io_lib:format("~1024p", [Value])).

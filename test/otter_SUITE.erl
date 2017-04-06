@@ -32,7 +32,8 @@ ftest(_Config) ->
     S6 = otter:span_log(S5, 'this is a atom'),
     S7 = otter:span_log(S6, io_lib:format("int: ~w, float: ~f, hex: ~.16B, Span: ~p",
 					  [1, 1.0, 1, S6])),
-    otter:span_end(S7),
+    S8 = otter:span_log(S7, S7),
+    otter:span_end(S8),
     timer:sleep(200),
     [_] = ets:tab2list(test_span_collector).
 
