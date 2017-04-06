@@ -292,6 +292,10 @@ to convert: integer, atom, and iolist types to binary. Unknown data types
 control character. The resulting string might be hard to read for non-Erlang
 people, but it is still better than loosing the information completely.
 
+If the generation of log values is complex or computational expensive, a
+arity zero fun can be passed as info. The function is executed in the
+connector module and thereby after span_end has been called.
+
 Adding service information to tags and logs means that otter adds a host
 structure to each of these elements. The extra optional service parameter
 in the relevant API calls can have 3 formats.
