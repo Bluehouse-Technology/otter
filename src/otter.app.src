@@ -1,6 +1,6 @@
 {application, otter,
  [{description, "OpenTracing Toolkit for ERlang"},
-  {vsn, "0.1.0"},
+  {vsn, "0.2.0"},
   {registered, [otter_sup, otter_snapshot_count, otter_conn_zipkin]},
   {mod, { otter_app, []}},
   {applications,
