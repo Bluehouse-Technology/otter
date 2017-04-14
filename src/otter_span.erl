@@ -16,14 +16,30 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
-%%%-------------------------------------------------------------------
+%%% @doc This module supports both the functional and p-dict style
+%%% APIs. This is for internal use. Use the API in the `otter' module
+%%% primarily, or if you want to use the process dictionary API, use
+%%% the `otter_span_pdict_api' module 
+%%% @end
+%%% -------------------------------------------------------------------
 
 -module(otter_span).
--compile(export_all).
--include("otter.hrl").
+-export([
+         fstart/1, fstart/2, fstart/3,
+         fend/1,
+         fget_ids/1,
+         flog/2, flog/3,
+         ftag/3, ftag/4,
 
-%% ====================  SPAN function API  ======================
-%% This API functions with passing around the Span in the function calls
+         pstart/1, pstart/2, pstart/3,
+         pend/0,
+         pget_span/0,
+         pget_ids/0,
+         plog/1, plog/2,
+         ptag/2, ptag/3
+        ]).
+
+-include("otter.hrl").
 
 fstart(Name) ->
     fstart(Name, otter_lib:id()).
@@ -87,28 +103,29 @@ pstart(Name, TraceId) ->
     pstart(Name, TraceId, undefined).
 
 pstart(Name, TraceId, ParentId) ->
-    put(otter_span_information, fstart(Name, TraceId, ParentId)),
-    ok.
+    Span = fstart(Name, TraceId, ParentId),
+    put(otter_span_information, Span),
+    Span.
 
 ptag(Key, Value) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, ftag(Span, Key, Value)),
-    ok.
+    Span = ftag(get(otter_span_information), Key, Value), 
+    put(otter_span_information, Span),
+    Span.
 
 ptag(Key, Value, Service) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, ftag(Span, Key, Value, Service)),
-    ok.
+    Span = ftag(get(otter_span_information), Key, Value, Service),
+    put(otter_span_information, Span),
+    Span.
 
 plog(Text) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, flog(Span, Text)),
-    ok.
+    Span = flog(get(otter_span_information), Text),
+    put(otter_span_information, Span),
+    Span.
 
 plog(Text, Service) ->
-    Span = get(otter_span_information),
-    put(otter_span_information, flog(Span, Text, Service)),
-    ok.
+    Span = flog(get(otter_span_information), Text, Service),
+    put(otter_span_information, Span),
+    Span.
 
 pend() ->
     Span = get(otter_span_information),

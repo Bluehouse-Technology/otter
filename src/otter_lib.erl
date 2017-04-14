@@ -19,7 +19,13 @@
 %%%-------------------------------------------------------------------
 
 -module(otter_lib).
--compile(export_all).
+-export([
+         id/0,
+         ip_to_i32/1,
+         i32_to_ip/1,
+         timestamp/0,
+         to_bin/1
+         ]).
 
 
 ip_to_i32({A,B,C,D}) ->

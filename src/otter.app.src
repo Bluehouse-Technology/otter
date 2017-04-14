@@ -11,7 +11,7 @@
    ]},
   {env,[
     {http_client, ibrowse},
-    {zipkin_collector_uri, "http://172.17.0.2:9411/api/v1/spans"},
+    {zipkin_collector_uri, "http://127.0.0.1:9411/api/v1/spans"},
     {zipkin_batch_interval_ms, 100},
     {zipkin_tag_host_ip, {127,0,0,1}},
     {zipkin_tag_host_port, 0},

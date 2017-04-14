@@ -14,6 +14,8 @@ ct:
 	@${REBAR} ct --sys_config test/test_httpc.config
 	@${REBAR} ct --sys_config test/test_ibrowse.config
 
+test: ct
+
 clean:
 	@${REBAR} clean
 
@@ -25,3 +27,9 @@ distclean: clean
 
 rebar3:
 	wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+
+dialyzer:
+	@${REBAR} dialyzer
+
+docs:
+	@${REBAR} edoc

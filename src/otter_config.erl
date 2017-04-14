@@ -16,10 +16,19 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
-%%%-------------------------------------------------------------------
+%%% @doc This module provides the configuration API but you should
+%%% instead use the API in the `otter' module.
+%%% @see otter
+%%% @end
+%%% -------------------------------------------------------------------
 
 -module(otter_config).
--compile(export_all).
+-export([
+         list/0,
+         read/1,
+         read/2,
+         write/2
+        ]).
 
 list() ->
     application:get_all_env(otter).

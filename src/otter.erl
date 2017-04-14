@@ -16,114 +16,152 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
-%%% @doc
-%%% otter API module
+
+%%% @doc otter API module. Use the API in this module to interact with
+%%% the `otter' application. If you want to specifically use the
+%%% process dictionary API, use the `otter_pdict_api' module instead.
+%%% The API is broken down into 3 sections. The `Span API',
+%%% `Snapshot/Count API' and `Config API'.
+%%%
+%%% == Span API ==
+%%% These API calls allow you to create and manage spans. These are:<br/>
+%%% `start/1, start/2, start/3'<br/>
+%%% `finish/1' <br/>
+%%% `ids/1' <br/>
+%%% `log/2, log/3' <br/>
+%%% `tag/3, tag/4' <br/>
+%%%
+%%% == Snapshot/Count API  ==
+%%% When `finish/1' is called then the completed span is
+%%% passed to a configurable filter. The filter can check the Span tags
+%%% as well as the name and duration of the span and use the information
+%%% to decide to send the Span to the trace collector (Zipkin supported)
+%%% and/or increase counters based on values of the tags and store the
+%%% last Span for the counters. This latter is particularly useful for
+%%% troubleshooting e.g. error events when increase of the corresponding
+%%% counter is noticed. These snapshots (referred as Snap) and counters
+%%% can be retrieved, managed with this API. These are:<br/>
+%%% `counter_list/0'<br/>
+%%% `counter_snapshot/1'<br/>
+%%% `counter_delete/1'<br/>
+%%% `counter_delete_all/0'<br/>
+%%% 
+%%% == Config API ==
+%%% The default implementation uses the application environment to
+%%% store configuration. There is a simple wrapper module to interface
+%%% with configuration store (otter_config). To implement other config
+%%% persistence, the module should be replaced with another one providing
+%%% the same simple read/write API functions.<br/>
+%%% <em>WARNING</em> : In the default implementation using the application
+%%% environment, so the write function is NOT persistent. In case of node
+%%% restart and/or application reload the configuration will be reset to
+%%% whatever environment is defined in the release (sys) config or app
+%%% file. There is an example configuration provided in the `otter.app'
+%%% file as a reference. These are:<br/>
+%%% `config_list/0'<br/>
+%%% `config_read/1'<br/>
+%%% `config_read/2'<br/>
+%%% `config_write/2'<br/>
 %%% @end
 %%%-------------------------------------------------------------------
 
 -module(otter).
--compile(export_all).
 -include("otter.hrl").
 
-%% ====================  SPAN function API  ======================
-%% This API functions with passing around the Span in the function calls
-%% All of them return a Span structure (erlang map).
+-export([
+         %% Span API
+         start/1, start/2, start/3,
+         finish/1,
+         ids/1,
+         log/2, log/3,
+         tag/3, tag/4,
 
--spec span_start(info()) -> span().
-span_start(Name) ->
+         %% Snapshot / Count API
+         counter_list/0,
+         counter_snapshot/1,
+         counter_delete/1,
+         counter_delete_all/0,
+
+         %% Config API
+         config_list/0,
+         config_read/1,
+         config_read/2,
+         config_write/2
+        ]).
+
+%%--------------------------------------------------------------------
+%% @doc Starts a span with the specified name. Automatically generates
+%% a TraceId.  
+%% @end
+%%--------------------------------------------------------------------
+-spec start(info()) -> span().
+start(Name) ->
     otter_span:fstart(Name).
 
--spec span_start(info(), integer()) -> span().
-span_start(Name, TraceId) ->
+%%--------------------------------------------------------------------
+%% @doc Starts a span with the specified name and TraceId
+%% @end
+%%--------------------------------------------------------------------
+-spec start(info(), integer()) -> span().
+start(Name, TraceId) ->
     otter_span:fstart(Name, TraceId).
 
--spec span_start(info(), integer(), integer()) -> span().
-span_start(Name, TraceId, ParentId) ->
+%%--------------------------------------------------------------------
+%% @doc Starts a child span with the specified name, TraceId and
+%% ParentId 
+%% @end
+%% --------------------------------------------------------------------
+-spec start(info(), integer(), integer()) -> span().
+start(Name, TraceId, ParentId) ->
     otter_span:fstart(Name, TraceId, ParentId).
 
--spec span_tag(span(), info(), info()) -> span().
-span_tag(Span, Key, Value) ->
+%%--------------------------------------------------------------------
+%% @doc Adds a tag to a span. If the tag already exists, its value
+%% will be overwritten 
+%% @end
+%% --------------------------------------------------------------------
+-spec tag(span(), info(), info()) -> span().
+tag(Span, Key, Value) ->
     otter_span:ftag(Span, Key, Value).
 
--spec span_tag(span(), info(), info(), service()) -> span().
-span_tag(Span, Key, Value, Service) ->
+%%--------------------------------------------------------------------
+%% @doc Adds a tag to a span with a given service. If the tag already
+%% exists, its value will be overwritten
+%% @end
+%% --------------------------------------------------------------------
+-spec tag(span(), info(), info(), service()) -> span().
+tag(Span, Key, Value, Service) ->
     otter_span:ftag(Span, Key, Value, Service).
 
-
--spec span_log(span(), info()) -> span().
-span_log(Span, Text) ->
+%%--------------------------------------------------------------------
+%% @doc Adds a log message to a span
+%% @end
+%% --------------------------------------------------------------------
+-spec log(span(), info()) -> span().
+log(Span, Text) ->
     otter_span:flog(Span, Text).
 
--spec span_log(span(), info(), service()) -> span().
-span_log(Span, Text, Service) ->
+-spec log(span(), info(), service()) -> span().
+log(Span, Text, Service) ->
     otter_span:flog(Span, Text, Service).
 
--spec span_end(span()) -> ok.
-span_end(Span) ->
+%%--------------------------------------------------------------------
+%% @doc Ends a span and prepares it for potential delivery to the
+%% backend based on filtering rules
+%% @end
+%% --------------------------------------------------------------------
+-spec finish(span()) -> ok.
+finish(Span) ->
     otter_span:fend(Span).
 
--spec span_ids(span()) -> {trace_id(), span_id()}.
-span_ids(Span) ->
+%%--------------------------------------------------------------------
+%% @doc Returns the TraceId and SpanId for a given span.
+%% @end
+%% --------------------------------------------------------------------
+-spec ids(span()) -> {trace_id(), span_id()}.
+ids(Span) ->
     otter_span:fget_ids(Span).
 
-
-%% ====================  SPAN process API  ======================
-%% This API uses the process dictionary to collect span information
-%% and can be used when all span tags an events happen in the same
-%% request handling process.
-
--spec span_pstart(info()) -> ok.
-span_pstart(Name) ->
-    otter_span:pstart(Name).
-
--spec span_pstart(info(), trace_id()) -> ok.
-span_pstart(Name, TraceId) ->
-    otter_span:pstart(Name, TraceId).
-
--spec span_pstart(info(), trace_id(), span_id()) -> ok.
-span_pstart(Name, TraceId, ParentId) ->
-    otter_span:pstart(Name, TraceId, ParentId).
-
--spec span_ptag(info(), info()) -> ok.
-span_ptag(Key, Value) ->
-    otter_span:ptag(Key, Value).
-
--spec span_ptag(info(), info(), service()) -> ok.
-span_ptag(Key, Value, Service) ->
-    otter_span:ptag(Key, Value, Service).
-
--spec span_plog(info()) -> ok.
-span_plog(Text) ->
-    otter_span:plog(Text).
-
--spec span_plog(info(), service()) -> ok.
-span_plog(Text, Service) ->
-    otter_span:plog(Text, Service).
-
--spec span_pend() -> ok.
-span_pend() ->
-    otter_span:pend().
-
--spec span_pids() -> {trace_id(), span_id()}.
-span_pids() ->
-    otter_span:pget_ids().
-
--spec span_pget() -> span().
-span_pget() ->
-    otter_span:pget_span().
-
-
-
-%% ========================  Snap/Count API  =========================
-%% When span_end/1 or span_pend/0 is called then the completed span is
-%% passed to a configurable filter. The filter can check the Span tags
-%% as well as the name and duration of the span and use the information
-%% to decide to send the Span to the trace collector (Zipkin supported)
-%% and/or increase counters based on values of the tags and store the
-%% last Span for the counters. This latter is particularly useful for
-%% troubleshooting e.g. error events when increase of the corresponding
-%% counter is noticed. These snapshots (referred as Snap) and counters
-%% can be retrieved, managed with this API
 
 -spec counter_list() -> [{list(), integer()}].
 counter_list() ->
@@ -142,18 +180,6 @@ counter_delete_all() ->
     otter_snapshot_count:delete_all_counters().
 
 
-%% ========================== Config API ============================
-%% The default implementation uses the application environment to
-%% store configuration. There is a simple wrapper module to interface
-%% with configuration store (otter_config). To implementat other config
-%% persistence, the module should be replaced with another one providing
-%% the same simple read/write API functions.
-%% WARNING : In the default implementation using the application
-%% environment, so the write function is NOT persistent. In case of node
-%% restart and/or application reload the configuration will be reset to
-%% whatever environment is defined in the release (sys) config or app
-%% file. There is an example configuration provided in the otter.app
-%% file as a reference.
 
 -spec config_list() -> term().
 config_list() ->

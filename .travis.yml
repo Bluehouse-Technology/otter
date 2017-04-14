@@ -1,0 +1,22 @@
+language: erlang
+
+before_script:
+  - kerl list installations
+
+otp_release:
+  - 19.2
+  - 18.2
+  - 17.5
+  - R16B03
+
+sudo: false
+install: true
+script:
+  - ./rebar3 xref
+  - ./rebar3 dialyzer
+  - ./rebar3 ct --suite test/otter_SUITE
+
+branches:
+  only:
+  - master
+  - dev

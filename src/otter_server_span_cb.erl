@@ -16,6 +16,8 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
+%%% @doc This module is used purely for test purposes.
+%%% @end
 %%%-------------------------------------------------------------------
 
 -module(otter_server_span_cb).

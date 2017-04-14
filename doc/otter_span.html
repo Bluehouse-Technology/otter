@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module otter_span</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module otter_span</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>This module supports both the functional and p-dict style
+   APIs.
+
+
+<h2><a name="description">Description</a></h2>This module supports both the functional and p-dict style
+   APIs. This is for internal use. Use the API in the <code>otter</code> module
+   primarily, or if you want to use the process dictionary API, use
+   the <code>otter_span_pdict_api</code> module
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#fend-1">fend/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#fget_ids-1">fget_ids/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#flog-2">flog/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#flog-3">flog/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#fstart-1">fstart/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#fstart-2">fstart/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#fstart-3">fstart/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ftag-3">ftag/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ftag-4">ftag/4</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pend-0">pend/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pget_ids-0">pget_ids/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pget_span-0">pget_span/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#plog-1">plog/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#plog-2">plog/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pstart-1">pstart/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pstart-2">pstart/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#pstart-3">pstart/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ptag-2">ptag/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ptag-3">ptag/3</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="fend-1">fend/1</a></h3>
+<div class="spec">
+<p><tt>fend(Span) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="fget_ids-1">fget_ids/1</a></h3>
+<div class="spec">
+<p><tt>fget_ids(Span) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="flog-2">flog/2</a></h3>
+<div class="spec">
+<p><tt>flog(Span, Text) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="flog-3">flog/3</a></h3>
+<div class="spec">
+<p><tt>flog(Span, Text, Service) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="fstart-1">fstart/1</a></h3>
+<div class="spec">
+<p><tt>fstart(Name) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="fstart-2">fstart/2</a></h3>
+<div class="spec">
+<p><tt>fstart(Name, TraceId) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="fstart-3">fstart/3</a></h3>
+<div class="spec">
+<p><tt>fstart(Name, TraceId, ParentId) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="ftag-3">ftag/3</a></h3>
+<div class="spec">
+<p><tt>ftag(Span, Key, Value) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="ftag-4">ftag/4</a></h3>
+<div class="spec">
+<p><tt>ftag(Span, Key, Value, Service) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pend-0">pend/0</a></h3>
+<div class="spec">
+<p><tt>pend() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pget_ids-0">pget_ids/0</a></h3>
+<div class="spec">
+<p><tt>pget_ids() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pget_span-0">pget_span/0</a></h3>
+<div class="spec">
+<p><tt>pget_span() -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="plog-1">plog/1</a></h3>
+<div class="spec">
+<p><tt>plog(Text) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="plog-2">plog/2</a></h3>
+<div class="spec">
+<p><tt>plog(Text, Service) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pstart-1">pstart/1</a></h3>
+<div class="spec">
+<p><tt>pstart(Name) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pstart-2">pstart/2</a></h3>
+<div class="spec">
+<p><tt>pstart(Name, TraceId) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="pstart-3">pstart/3</a></h3>
+<div class="spec">
+<p><tt>pstart(Name, TraceId, ParentId) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="ptag-2">ptag/2</a></h3>
+<div class="spec">
+<p><tt>ptag(Key, Value) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="ptag-3">ptag/3</a></h3>
+<div class="spec">
+<p><tt>ptag(Key, Value, Service) -&gt; any()</tt></p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Apr 14 2017, 04:05:41.</i></p>
+</body>
+</html>

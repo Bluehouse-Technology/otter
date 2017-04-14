@@ -16,16 +16,20 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
-%%%-------------------------------------------------------------------
-
-%% @doc This module facilitates encoding/decoding of thrift data lists encoded
-%% with the binary protocol, suitable for sending/receiving spans
-%% on the zipkin interface.
-
-%% Sending is async
+%%% @doc This module facilitates encoding/decoding of thrift data
+%%% lists encoded with the binary protocol, suitable for
+%%% sending/receiving spans on the zipkin interface. Sending spans to
+%%% Zipkin is async 
+%%% @end
+%%% -------------------------------------------------------------------
 
 -module(otter_conn_zipkin).
--compile(export_all).
+-export([
+         decode_spans/1,
+         send_buffer/0,
+         store_span/1,
+         sup_init/0
+        ]).
 -include("otter.hrl").
 
 sup_init() ->
@@ -198,9 +202,11 @@ host_to_struct(default) ->
         atom_to_list(node())
     ),
     host_to_struct(DefaultService);
-host_to_struct(Service) when is_binary(Service) orelse is_list(Service) ->
+host_to_struct(Service) when is_binary(Service) orelse 
+                             is_list(Service) orelse
+                             is_atom(Service) ->
     host_to_struct({
-        Service,
+        otter_lib:to_bin(Service),
         otter_config:read(zipkin_tag_host_ip, {127,0,0,1}),
         otter_config:read(zipkin_tag_host_port, 0)
     });

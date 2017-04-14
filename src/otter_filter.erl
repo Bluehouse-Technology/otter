@@ -16,45 +16,56 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
+%%%
+%%% @doc
+%%% The main idea behind this filter that the processing of the spans can
+%%% be modified runtime by changing the filter configuration. This way
+%%% logging, counting or sending data to trace collectors can be modified
+%%% on the running system based on the changing operational requirements.
+%%%
+%%% The span filter works with key value pair lists. This was the
+%%% easiest to implement and reasonably fast.
+%%%
+%%% Filter rules are composed by a list of `{Conditions, Actions}' tuples.
+%%% Processing a span means iterating through this list and when an item
+%%% found where all `Conditions' evaluate to true then the `Actions' in that
+%%% item are executed.
+%%%
+%%% `Conditions' operate on a copy of the tags of the span. It is a
+%%% sequence of checks against the tags (e.g. key present, key value)
+%%% where if any check in the sequence fails, the associated actions are
+%%% not executed and the next `{Conditions, Actions}' item is evaluated.
+%%% `Actions' can trigger e.g. counting a particular tag value combination,
+%%% logging, sending the span to trace collectors, modifying the working
+%%% (i.e. used for further conditions) tag list, modifying the span tag
+%%% list that is to be sent to trace collector. `Actions' can also
+%%% influence the further evaluation of the rules i.e. providing the
+%%% break action instructs the rule engine NOT to look further in the
+%%% list of `{Conditions, Actions}'.
+%%%
+%%% `Evaluation' of the rules happens in the process which invokes the span
+%%% end statement (e.g. @link otter:finish/1.) i.e. it has impact on the
+%%% request processing time. Therefore the actions that consume little
+%%% time and resources with no external interfaces (e.g. counting in ets)
+%%% can be done during the evaluation of the rules, but anything that has
+%%% external interface or dependent on environment (e.g. logging and trace
+%%% collecting) should be done asynchronously.
+%%% @end
 %%%-------------------------------------------------------------------
 
 -module(otter_filter).
--compile(export_all).
+-export([
+         span/1
+        ]).
+
 -include("otter.hrl").
 
-%% The main idea behind this filter that the processing of the spans can
-%% be modified runtime by changing the filter configuration. This way
-%% logging, counting or sending data to trace collectors can be modified
-%% on the running system based on the changing operational requirements.
-
-%% The span filter works with key value pair lists easiest to implement
-%% and reasonably fast.
-
-%% Filter rules are composed by a list of {Conditions, Actions} tuples.
-%% Processing a span means iterating through this list and when an item
-%% found where all Conditions evaluate to true then the Actions in that
-%% item are executed.
-
-%% Conditions operate on a copy of the tags of the span. It is a
-%% sequence of checks against the tags (e.g. key present, key value)
-%% where if any check in the sequence fails, the associated actions are
-%% not executed and the next {Conditions, Actions} item is evaluated.
-%% Actions can trigger e.g. counting a particular tag value combination,
-%% logging, sending the span to trace collectors, modifying the working
-%% (i.e. used for further conditions) tag list, modifying the span tag
-%% list that is to be sent to trace collector. Actions can also
-%% influence the further evaluation of the rules i.e. providing the
-%% break action instructs the rule engine NOT to look further in the
-%% list of {Conditions, Actions}.
-
-%% Evaluation of the rules happens in the process which invokes the span
-%% end statement (e.g. otter_span:pend/0) i.e. it has impact on the
-%% request processing time. Therefore the actions that consume little
-%% time and resources with no external interfaces (e.g. counting in ets)
-%% can be done during the evaluation of the rules, but anything that has
-%% external interface or dependent on environment (e.g. logging and trace
-%% collecting) should be done asynchronously.
-
+%%--------------------------------------------------------------------
+%% @doc Takes a span as input, evaluates rules specified in
+%% configuration and executes any specified actions.
+%% @end
+%% --------------------------------------------------------------------
+-spec span(span()) -> ok.
 span(#span{tags = Tags, name = Name, duration = Duration} = Span) ->
     Rules = otter_config:read(filter_rules, []),
     rules(Rules, [

@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module otter_span_pdict_api</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module otter_span_pdict_api</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   This API uses the process dictionary to collect span information
+   and can be used when all span tags an events happen in the same
+   request handling process.
+
+
+<h2><a name="description">Description</a></h2>
+   This API uses the process dictionary to collect span information
+   and can be used when all span tags an events happen in the same
+   request handling process.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#finish-0">finish/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#finish-1">finish/1</a></td><td>This is provided purely for API compatibility with the otter_span_api module.</td></tr>
+<tr><td valign="top"><a href="#get-0">get/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ids-0">ids/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#ids-1">ids/1</a></td><td>This is provided purely for API compatibility with the otter_span_api module.</td></tr>
+<tr><td valign="top"><a href="#log-1">log/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#log-2">log/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start-1">start/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start-2">start/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start-3">start/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#tag-2">tag/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#tag-3">tag/3</a></td><td></td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="finish-0">finish/0</a></h3>
+<div class="spec">
+<p><tt>finish() -&gt; ok</tt><br></p>
+</div>
+
+<h3 class="function"><a name="finish-1">finish/1</a></h3>
+<div class="spec">
+<p><tt>finish(Span::<a href="#type-span">span()</a>) -&gt; ok</tt><br></p>
+</div><p>This is provided purely for API compatibility with the otter_span_api module</p>
+
+<h3 class="function"><a name="get-0">get/0</a></h3>
+<div class="spec">
+<p><tt>get() -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+
+<h3 class="function"><a name="ids-0">ids/0</a></h3>
+<div class="spec">
+<p><tt>ids() -&gt; {<a href="#type-trace_id">trace_id()</a>, <a href="#type-span_id">span_id()</a>}</tt><br></p>
+</div>
+
+<h3 class="function"><a name="ids-1">ids/1</a></h3>
+<div class="spec">
+<p><tt>ids(Span::<a href="#type-span">span()</a>) -&gt; {<a href="#type-trace_id">trace_id()</a>, <a href="#type-span_id">span_id()</a>}</tt><br></p>
+</div><p>This is provided purely for API compatibility with the otter_span_api module</p>
+
+<h3 class="function"><a name="log-1">log/1</a></h3>
+<div class="spec">
+<p><tt>log(Text::<a href="#type-info">info()</a>) -&gt; ok</tt><br></p>
+</div>
+
+<h3 class="function"><a name="log-2">log/2</a></h3>
+<div class="spec">
+<p><tt>log(Text::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; ok</tt><br></p>
+</div>
+
+<h3 class="function"><a name="start-1">start/1</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+
+<h3 class="function"><a name="start-2">start/2</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>, TraceId::<a href="#type-trace_id">trace_id()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+
+<h3 class="function"><a name="start-3">start/3</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>, TraceId::<a href="#type-trace_id">trace_id()</a>, ParentId::<a href="#type-span_id">span_id()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+
+<h3 class="function"><a name="tag-2">tag/2</a></h3>
+<div class="spec">
+<p><tt>tag(Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+
+<h3 class="function"><a name="tag-3">tag/3</a></h3>
+<div class="spec">
+<p><tt>tag(Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Apr 14 2017, 04:05:41.</i></p>
+</body>
+</html>

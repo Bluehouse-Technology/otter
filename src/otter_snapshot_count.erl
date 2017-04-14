@@ -16,17 +16,26 @@
 %%% specific language governing permissions and limitations
 %%% under the License.
 %%%
+%%% @doc
+%%% This module implements a simple way of giving operational visibility
+%%% to events/spans in the system. It expects a Key and Data where the
+%%% Key is used to increment a counter in a table and also to store the
+%%% last received Data for that Key. The Data is preferred to be a list
+%%% of 2 element {K,V} tuples, if it is any other format, it uses
+%%% [{data, Data}] to store the last information.
+%%% @end
 %%%-------------------------------------------------------------------
 
 -module(otter_snapshot_count).
--compile(export_all).
+-export([
+         delete_all_counters/0,
+         delete_counter/1,
+         get_snap/1,
+         list_counts/0,
+         snapshot/2,
+         sup_init/0
+        ]).
 
-%% This module implements a simple way of giving operational visibility
-%% to events/spans in the system. It expects a Key and Data where the
-%% Key is used to increment a counter in a table and also to store the
-%% last received Data for that Key. The Data is preferred to be a list
-%% of 2 element {K,V} tuples, if it is any other format, it uses
-%% [{data, Data}] to store the last information.
 
 snapshot(Key, [{_, _} |_ ] = Data) ->
     {_, _, Us} = os:timestamp(),
@@ -64,17 +73,11 @@ delete_all_counters() ->
     ets:delete_all_objects(otter_snapshot_store),
     ets:delete_all_objects(otter_snapshot_count).
 
-sup_init() -> [
-    ets:new(
-        Tab,
-        [named_table, public, {Concurrency, true}]
-    ) ||
-    {Tab, Concurrency} <- [
-        {otter_snapshot_count, write_concurrency},
-        {otter_snapshot_store, write_concurrency}
-    ]
-].
-
-
-
-
+sup_init() -> 
+    [
+     ets:new(Tab, [named_table, public, {Concurrency, true}]) ||
+        {Tab, Concurrency} <- [
+                               {otter_snapshot_count, write_concurrency},
+                               {otter_snapshot_store, write_concurrency}
+                              ]
+    ].
