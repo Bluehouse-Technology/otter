@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bluehouse-technology/otter.svg)](https://travis-ci.org/Bluehouse-Technology/otter) [![Hex pm](http://img.shields.io/hexpm/v/otters.svg?style=flat)](https://hex.pm/packages/otter) [Docs](https://hexdocs.pm/otter)
+[![Build Status](https://travis-ci.org/bluehouse-technology/otter.svg)](https://travis-ci.org/Bluehouse-Technology/otter) [![Hex pm](http://img.shields.io/hexpm/v/otter.svg?style=flat)](https://hex.pm/packages/otter) [Docs](https://hexdocs.pm/otter)
 
 # OTTER
 
