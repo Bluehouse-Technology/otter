@@ -55,11 +55,11 @@ tag(Key, Value) ->
 tag(Key, Value, Service) ->
     otter_span:ptag(Key, Value, Service).
 
--spec log(info()) -> ok.
+-spec log(info()) -> span().
 log(Text) ->
     otter_span:plog(Text).
 
--spec log(info(), service()) -> ok.
+-spec log(info(), service()) -> span().
 log(Text, Service) ->
     otter_span:plog(Text, Service).
 

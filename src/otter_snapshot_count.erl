@@ -67,11 +67,13 @@ get_snap(Key) ->
 
 delete_counter(Key) ->
     ets:delete(otter_snapshot_store, Key),
-    ets:delete(otter_snapshot_count, Key).
+    ets:delete(otter_snapshot_count, Key),
+    ok.
 
 delete_all_counters() ->
     ets:delete_all_objects(otter_snapshot_store),
-    ets:delete_all_objects(otter_snapshot_count).
+    ets:delete_all_objects(otter_snapshot_count),
+    ok.
 
 sup_init() -> 
     [
