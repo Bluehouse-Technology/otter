@@ -33,3 +33,6 @@ dialyzer:
 
 docs:
 	@${REBAR} edoc
+
+xref:
+	${REBAR} xref

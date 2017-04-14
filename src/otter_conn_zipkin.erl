@@ -409,7 +409,7 @@ decode_struct(Data, Acc) ->
     end.
 
 decode_map(KeyType, ValType, 0, Rest, Acc) ->
-    {{{KeyType, ValType}, list:reverse(Acc)}, Rest};
+    {{{KeyType, ValType}, lists:reverse(Acc)}, Rest};
 decode_map(KeyType, ValType, Size, KVPsAndRest, Acc) ->
     {Key, ValAndRest} = decode(KeyType, KVPsAndRest),
     {Val, Rest} =  decode(ValType, ValAndRest),
