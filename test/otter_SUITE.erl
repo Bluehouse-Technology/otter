@@ -7,6 +7,7 @@ all() ->
     [ftest, ptest].
 
 ptest(_Config) ->
+    application:ensure_all_started(cowboy),
     application:ensure_all_started(otter),
     application:set_env(otter, zipkin_collector_uri, "http://127.0.0.1:19411/api/v1/spans"),
     application:set_env(otter, server_zipkin_callback, {?MODULE, handle_span}),
@@ -20,6 +21,7 @@ ptest(_Config) ->
     [_] = ets:tab2list(test_span_collector).
 
 ftest(_Config) ->
+    application:ensure_all_started(cowboy),
     application:ensure_all_started(otter),
     application:set_env(otter, zipkin_collector_uri, "http://127.0.0.1:19411/api/v1/spans"),
     application:set_env(otter, server_zipkin_callback, {?MODULE, handle_span}),
