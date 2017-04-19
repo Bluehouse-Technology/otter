@@ -40,11 +40,11 @@ start(Name) ->
     otter_span:pstart(Name).
 
 -spec start(info(), trace_id()) -> span().
-start(Name, TraceId) ->
+start(Name, TraceId) when is_integer(TraceId) ->
     otter_span:pstart(Name, TraceId).
 
 -spec start(info(), trace_id(), span_id()) -> span().
-start(Name, TraceId, ParentId) ->
+start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
     otter_span:pstart(Name, TraceId, ParentId).
 
 -spec tag(info(), info()) -> span().
@@ -69,7 +69,7 @@ finish() ->
 
 -spec finish(span()) -> ok.
 %% @doc This is provided purely for API compatibility with the otter_span_api module
-finish(_Span) ->
+finish(#span{} = _Span) ->
     otter_span:pend().
 
 -spec ids() -> {trace_id(), span_id()}.
@@ -78,7 +78,7 @@ ids() ->
 
 -spec ids(span()) -> {trace_id(), span_id()}.
 %% @doc This is provided purely for API compatibility with the otter_span_api module
-ids(_Span) ->
+ids(#span{} = _Span) ->
     otter_span:pget_ids().
 
 -spec get() -> span().
