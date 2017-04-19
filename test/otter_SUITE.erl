@@ -13,6 +13,7 @@ ptest(_Config) ->
     ets:new(test_span_collector, [named_table, public, {keypos, 2}]),
     otter_span_pdict_api:start("test_span"),
     otter_span_pdict_api:log("started"),
+    otter_span_pdict_api:log("α =:= ω"),
     otter_span_pdict_api:tag("result", "ok"),
     otter_span_pdict_api:finish(),
     timer:sleep(200),
@@ -26,7 +27,14 @@ ftest(_Config) ->
     S1 = otter:start("test_span"),
     S2 = otter:log(S1, "started"),
     S3 = otter:tag(S2, "result", "ok"),
-    otter:finish(S3),
+    S4 = otter:log(S3, "α =:= ω"),
+    S5 = otter:log(S4, 123456),
+    S6 = otter:log(S5, 'this is a atom'),
+    S7 = otter:log(S6, io_lib:format("int: ~w, float: ~f, hex: ~.16B, Span: ~p",
+					  [1, 1.0, 1, S6])),
+    S8 = otter:log(S7, S7),
+    S9 = otter:log(S8, fun() -> "result of function" end),
+    otter:finish(S9),
     timer:sleep(200),
     [_] = ets:tab2list(test_span_collector).
 

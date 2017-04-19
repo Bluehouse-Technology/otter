@@ -90,7 +90,7 @@ The following type specifications are in otter.hrl
 
 ```erlang
 -type time_us() :: integer().           % timestamp in microseconds
--type info()    :: binary() | list() | atom() | integer().
+-type info()    :: binary() | iolist() | atom() | integer().
 -type ip4()     :: {integer(), integer(), integer(), integer()}.
 -type service() :: binary() | list() | default | {binary() | list(), ip4(), integer()}.
 -type trace_id():: integer().
@@ -289,12 +289,14 @@ example :
 
 A note on the tag key/value and log types: the Zipkin interface requires
 string types. The Zipkin connector module (otter_conn_zipkin.erl) attempts
-to convert: integer, atom, list types to binary. This allows using these
-data types too as keys, values and logs, however any other "non-obvious"
-types would still need conversion (or simply can not be used). The impact
-of having an incompatible type in the tag keys, values and logs will likely
-crash the encoding/sending function in the Zipkin connector module resulting
-the loss of the particular batch of spans.
+to convert: integer, atom, and iolist types to binary. Unknown data types
+(e.g. record, tuples, or maps) are converted using the "~p" io:fwrite formating
+control character. The resulting string might be hard to read for non-Erlang
+people, but it is still better than loosing the information completely.
+
+If the generation of log values is complex or computational expensive, a
+arity zero fun can be passed as info. The function is executed in the
+connector module and thereby after span_end has been called.
 
 Adding service information to tags and logs means that otter adds a host
 structure to each of these elements. The extra optional service parameter
