@@ -35,31 +35,31 @@
 
 -include("otter.hrl").
 
--spec start(info()) -> span().
+-spec start(info()) -> span_id().
 start(Name) ->
     otter_span:pstart(Name).
 
--spec start(info(), trace_id()) -> span().
+-spec start(info(), trace_id()) -> span_id().
 start(Name, TraceId) when is_integer(TraceId) ->
     otter_span:pstart(Name, TraceId).
 
--spec start(info(), trace_id(), span_id()) -> span().
+-spec start(info(), trace_id(), span_id()) -> span_id().
 start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
     otter_span:pstart(Name, TraceId, ParentId).
 
--spec tag(info(), info()) -> span().
+-spec tag(info(), info()) -> ok.
 tag(Key, Value) ->
     otter_span:ptag(Key, Value).
 
--spec tag(info(), info(), service()) -> span().
+-spec tag(info(), info(), service()) -> ok.
 tag(Key, Value, Service) ->
     otter_span:ptag(Key, Value, Service).
 
--spec log(info()) -> span().
+-spec log(info()) -> ok.
 log(Text) ->
     otter_span:plog(Text).
 
--spec log(info(), service()) -> span().
+-spec log(info(), service()) -> ok.
 log(Text, Service) ->
     otter_span:plog(Text, Service).
 
@@ -67,18 +67,18 @@ log(Text, Service) ->
 finish() ->
     otter_span:pend().
 
--spec finish(span()) -> ok.
+-spec finish(span_id()) -> ok.
 %% @doc This is provided purely for API compatibility with the otter_span_api module
-finish(#span{} = _Span) ->
+finish(_Span) ->
     otter_span:pend().
 
 -spec ids() -> {trace_id(), span_id()}.
 ids() ->
     otter_span:pget_ids().
 
--spec ids(span()) -> {trace_id(), span_id()}.
+-spec ids(span_id()) -> {trace_id(), span_id()}.
 %% @doc This is provided purely for API compatibility with the otter_span_api module
-ids(#span{} = _Span) ->
+ids(_Span) ->
     otter_span:pget_ids().
 
 -spec get() -> span().

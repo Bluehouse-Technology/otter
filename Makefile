@@ -29,10 +29,10 @@ rebar3:
 	wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
 
 dialyzer:
-	@${REBAR} dialyzer
+	@${REBAR} as test dialyzer
 
 docs:
 	@${REBAR} edoc
 
 xref:
-	${REBAR} xref
+	${REBAR} as test xref

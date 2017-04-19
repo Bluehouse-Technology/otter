@@ -94,7 +94,7 @@
 %% a TraceId.  
 %% @end
 %%--------------------------------------------------------------------
--spec start(info()) -> span().
+-spec start(info()) -> span_id().
 start(Name) ->
     otter_span:fstart(Name).
 
@@ -103,11 +103,11 @@ start(Name) ->
 %% ParentSpan
 %% @end
 %% --------------------------------------------------------------------
--spec start(info(), integer() | #span{}) -> span().
+-spec start(info(), integer() | #span{}) -> span_id().
 start(Name, TraceId) when is_integer(TraceId) ->
     otter_span:fstart(Name, TraceId);
-start(Name, #span{} = ParentSpan) ->
-    {TraceId, ParentId} = ids(ParentSpan),
+start(Name, #span{id = ParentSpanId} = _ParentSpan) ->
+    {TraceId, ParentId} = ids(ParentSpanId),
     otter_span:fstart(Name, TraceId, ParentId).
 
 %%--------------------------------------------------------------------
@@ -115,7 +115,7 @@ start(Name, #span{} = ParentSpan) ->
 %% ParentId 
 %% @end
 %% --------------------------------------------------------------------
--spec start(info(), integer(), integer()) -> span().
+-spec start(info(), integer(), integer()) -> span_id().
 start(Name, TraceId, ParentId) when is_integer(TraceId),
                                     is_integer(ParentId) ->
     otter_span:fstart(Name, TraceId, ParentId).
@@ -125,8 +125,8 @@ start(Name, TraceId, ParentId) when is_integer(TraceId),
 %% will be overwritten 
 %% @end
 %% --------------------------------------------------------------------
--spec tag(span(), info(), info()) -> span().
-tag(#span{} = Span, Key, Value) ->
+-spec tag(span_id(), info(), info()) -> ok.
+tag(Span, Key, Value) ->
     otter_span:ftag(Span, Key, Value).
 
 %%--------------------------------------------------------------------
@@ -134,20 +134,20 @@ tag(#span{} = Span, Key, Value) ->
 %% exists, its value will be overwritten
 %% @end
 %% --------------------------------------------------------------------
--spec tag(span(), info(), info(), service()) -> span().
-tag(#span{} = Span, Key, Value, Service) ->
+-spec tag(span_id(), info(), info(), service()) -> ok.
+tag(Span, Key, Value, Service) ->
     otter_span:ftag(Span, Key, Value, Service).
 
 %%--------------------------------------------------------------------
 %% @doc Adds a log message to a span
 %% @end
 %% --------------------------------------------------------------------
--spec log(span(), info()) -> span().
-log(#span{} = Span, Text) ->
+-spec log(span_id(), info()) -> ok.
+log(Span, Text) ->
     otter_span:flog(Span, Text).
 
--spec log(span(), info(), service()) -> span().
-log(#span{} = Span, Text, Service) ->
+-spec log(span_id(), info(), service()) -> ok.
+log(Span, Text, Service) ->
     otter_span:flog(Span, Text, Service).
 
 %%--------------------------------------------------------------------
@@ -155,16 +155,16 @@ log(#span{} = Span, Text, Service) ->
 %% backend based on filtering rules
 %% @end
 %% --------------------------------------------------------------------
--spec finish(span()) -> ok.
-finish(#span{} = Span) ->
+-spec finish(span_id()) -> ok.
+finish(Span) ->
     otter_span:fend(Span).
 
 %%--------------------------------------------------------------------
 %% @doc Returns the TraceId and SpanId for a given span.
 %% @end
 %% --------------------------------------------------------------------
--spec ids(span()) -> {trace_id(), span_id()}.
-ids(#span{} = Span) ->
+-spec ids(span_id()) -> {trace_id(), span_id()}.
+ids(Span) ->
     otter_span:fget_ids(Span).
 
 

@@ -23,6 +23,7 @@ environment.
 [ibrowse](https://github.com/cmullaparthi/ibrowse) HTTP client is used
 to send the HTTP/Thrift requests to Zipkin.
 
+### Test Deps
 [cowboy](https://github.com/ninenines/cowboy) HTTP server (version 1.x API)
 is used to receive HTTP/Thrift (Zipkin binary format).
 
@@ -121,46 +122,46 @@ proplists) then inserting the span information is more or less trivial.
 
 Start span with name only. Name should refer e.g. to the interface.
 ```erlang
--spec span_start(info()) -> span().
+-spec span_start(info()) -> span_id().
 ```
 
 Start span with name and trace_id where trace_id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer()) -> span().
+-spec span_start(info(), integer()) -> span_id().
 ```
 
 Start span with name, trace_id and parent span id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer(), integer()) -> span().
+-spec span_start(info(), integer(), integer()) -> span_id().
 ```
 
 Add a tag to the previously started span.
 ```erlang
--spec span_tag(span(), info(), info()) -> span().
+-spec span_tag(span_id(), info(), info()) -> ok.
 ```
 
 Add a tag to the previously started span with additional service information.
 ```erlang
--spec span_tag(span(), info(), info(), service()) -> span().
+-spec span_tag(span_id(), info(), info(), service()) -> ok.
 ```
 
 Add a log/event to the previously started span
 ```erlang
--spec span_log(span(), info()) -> span().
+-spec span_log(span_id(), info()) -> ok.
 ```
 
 Add a log/event to the previously started span with additional service information0
 ```erlang
--spec span_log(span(), info(), service()) -> span().
+-spec span_log(span_id(), info(), service()) -> ok.
 ```
 
 End span and invoke the span filter (see below)
 ```erlang
--spec span_end(span()) -> ok.
+-spec span_end(span_id()) -> ok.
 ```
 
 Get span id's. Return the **trace_id** and the **span** id from the
@@ -168,7 +169,7 @@ currently started span. This can be used e.g. when process "boundary" is
 to be passed and eventually new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
 ```erlang
--spec span_ids(span()) -> {trace_id(), span_id()}.
+-spec span_ids(span_id()) -> {trace_id(), span_id()}.
 ```
 example :
 
@@ -177,19 +178,19 @@ example :
     Span = otter:span_start("radius request"),
     ...
     ...
-    Span1 = otter:span_tag(Span, "request_id", RequestId),
+    ok = otter:span_tag(Span, "request_id", RequestId),
     ...
     ...
-    Span2 = otter:span_plog(Span1, "invoke user db"),
+    ok = otter:span_plog(Span, "invoke user db"),
     ...
     ...
-    Span3 = otter:span_plog(Span2, "user db result"),
-    Span4 = otter:span_ptag(Span3, "user db result", "ok"),
+    ok = otter:span_plog(Span, "user db result"),
+    ok = otter:span_ptag(Span, "user db result", "ok"),
     ...
     ...
-    Span5 = otter:span_ptag(Span4, "final result", "error"),
-    Span6 = otter:span_ptag(Span5, "final result reason", "unknown user"),
-    otter:span_pend(Span6),
+    ok = otter:span_ptag(Span, "final result", "error"),
+    ok = otter:span_ptag(Span, "final result reason", "unknown user"),
+    otter:span_pend(Span),
     ...
 ```
 

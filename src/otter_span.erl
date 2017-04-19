@@ -46,39 +46,68 @@ fstart(Name) ->
 fstart(Name, TraceId) ->
     fstart(Name, TraceId, undefined).
 fstart(Name, TraceId, ParentId) ->
-    #span{
-        timestamp = otter_lib:timestamp(),
-        trace_id = TraceId,
-        id = otter_lib:id(),
-        parent_id = ParentId,
-        name = Name
-    }.
+    SpanId = otter_lib:id(),
+    Span = #span{timestamp = otter_lib:timestamp(),
+                 trace_id  = TraceId,
+                 id        = SpanId,
+                 parent_id = ParentId,
+                 name      = Name
+                },
+    store_span(Span),
+    SpanId.
 
-ftag(Span, Key, Value) ->
+ftag(SpanId, Key, Value) when is_integer(SpanId) ->
+    ftag(retrieve_span(SpanId), Key, Value);
+ftag(#span{} = Span, Key, Value) ->
     Tags = Span#span.tags,
-    Span#span{
+    store_span(
+      Span#span{
         tags = lists:keystore(Key, 1, Tags, {Key, Value})
-    }.
+       }),
+    ok;
+ftag(undefined, _, _) ->
+    undefined.
 
-ftag(Span, Key, Value, Service) ->
+ftag(SpanId, Key, Value, Service) when is_integer(SpanId) ->
+    ftag(retrieve_span(SpanId), Key, Value, Service);
+ftag(#span{} = Span, Key, Value, Service) ->
     Tags = Span#span.tags,
-    Span#span{
+    store_span(
+      Span#span{
         tags = lists:keystore(Key, 1, Tags, {Key, Value, Service})
-    }.
+       }),
+    ok;
+ftag(_, _, _, _) ->
+    undefined.
 
-flog(Span, Text) ->
+
+flog(SpanId, Text) when is_integer(SpanId) ->
+    flog(retrieve_span(SpanId), Text);
+flog(#span{} = Span, Text) ->
     Logs = Span#span.logs,
-    Span#span{
+    store_span(
+      Span#span{
         logs = [{otter_lib:timestamp(), Text} | Logs]
-    }.
+       }),
+    ok;
+flog(_, _) ->
+    ok.
 
-flog(Span, Text, Service) ->
+flog(SpanId, Text, Service) when is_integer(SpanId) ->
+    flog(retrieve_span(SpanId), Text, Service);
+flog(#span{} = Span, Text, Service) ->
     Logs = Span#span.logs,
-    Span#span{
+    store_span(
+      Span#span{
         logs = [{otter_lib:timestamp(), Text, Service} | Logs]
-    }.
+       }),
+    ok;
+flog(_, _, _) ->
+    ok.
 
-fend(Span) ->
+fend(SpanId) when is_integer(SpanId) ->
+    fend(retrieve_span(SpanId));
+fend(#span{} = Span) ->
     Start = Span#span.timestamp,
     Logs = Span#span.logs,
     otter_filter:span(Span#span{
@@ -87,9 +116,12 @@ fend(Span) ->
     }),
     ok.
 
-fget_ids(Span) ->
-    #span{trace_id = TraceId, id = Id} = Span,
-    {TraceId, Id}.
+fget_ids(SpanId) when is_integer(SpanId) ->
+    fget_ids(retrieve_span(SpanId));
+fget_ids(#span{trace_id = TraceId, id = Id}) ->
+    {TraceId, Id};
+fget_ids(_) ->
+    undefined.
 
 %% ====================  SPAN process API  ======================
 %% This API uses the process dictionary to collect span information
@@ -104,31 +136,23 @@ pstart(Name, TraceId) ->
 
 pstart(Name, TraceId, ParentId) ->
     Span = fstart(Name, TraceId, ParentId),
-    put(otter_span_information, Span),
+    store_span_id(Span),
     Span.
 
 ptag(Key, Value) ->
-    Span = ftag(get(otter_span_information), Key, Value), 
-    put(otter_span_information, Span),
-    Span.
+    ftag(get_span_id(), Key, Value).
 
 ptag(Key, Value, Service) ->
-    Span = ftag(get(otter_span_information), Key, Value, Service),
-    put(otter_span_information, Span),
-    Span.
+    ftag(get_span_id(), Key, Value, Service).
 
 plog(Text) ->
-    Span = flog(get(otter_span_information), Text),
-    put(otter_span_information, Span),
-    Span.
+    flog(get_span_id(), Text).
 
 plog(Text, Service) ->
-    Span = flog(get(otter_span_information), Text, Service),
-    put(otter_span_information, Span),
-    Span.
+    flog(get_span_id(), Text, Service).
 
 pend() ->
-    Span = get(otter_span_information),
+    Span = get_span_id(),
     fend(Span).
 
 %% This call can be used to retrieve the IDs from the calling process
@@ -138,8 +162,22 @@ pend() ->
 %% above for the calling process, so they can be used in the handling of
 %% the call
 pget_ids() ->
-    #span{trace_id = TraceId, id = Id} = get(otter_span_information),
-    {TraceId, Id}.
+    fget_ids(get_span_id()).
 
 pget_span() ->
+    get_span_id().
+
+store_span_id(SpanId) ->
+    put(otter_span_information, SpanId).
+
+get_span_id() ->
     get(otter_span_information).
+
+store_span(#span{id = SpanId} = Span) ->
+    put({otter_span_information, SpanId}, Span),
+    retrieve_span(SpanId),
+    ok.
+
+retrieve_span(SpanId) ->
+    Span = get({otter_span_information, SpanId}),
+    Span.
