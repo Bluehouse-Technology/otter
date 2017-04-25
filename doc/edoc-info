@@ -1,0 +1,5 @@
+%% encoding: UTF-8
+{application,otter}.
+{modules,[otter,otter_app,otter_config,otter_conn_zipkin,otter_filter,
+          otter_lib,otter_server_span_cb,otter_server_zipkin_handler,
+          otter_snapshot_count,otter_span,otter_span_pdict_api,otter_sup]}.
