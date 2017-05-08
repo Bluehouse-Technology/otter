@@ -18,7 +18,7 @@ span(Span) ->
 
 run_rules(Span, Rules) ->
     Tags = make_rule_tags(Span),
-    Actions = otter_lib_filter:run(Tags, Rules, break),
+    Actions = otter_lib_filter:run(Tags, Rules),
     do_actions(Span, Tags, Actions).
 
 do_actions(Span, Tags, [{snapshot_count, Prefix, TagNames} | Rest]) ->
