@@ -1,177 +1,53 @@
-%%%-------------------------------------------------------------------
-%%% Licensed to the Apache Software Foundation (ASF) under one
-%%% or more contributor license agreements.  See the NOTICE file
-%%% distributed with this work for additional information
-%%% regarding copyright ownership.  The ASF licenses this file
-%%% to you under the Apache License, Version 2.0 (the
-%%% "License"); you may not use this file except in compliance
-%%% with the License.  You may obtain a copy of the License at
-%%%
-%%%   http://www.apache.org/licenses/LICENSE-2.0
-%%%
-%%% Unless required by applicable law or agreed to in writing,
-%%% software distributed under the License is distributed on an
-%%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-%%% KIND, either express or implied.  See the License for the
-%%% specific language governing permissions and limitations
-%%% under the License.
-%%%
-%%%
-%%% @doc
-%%% The main idea behind this filter that the processing of the spans can
-%%% be modified runtime by changing the filter configuration. This way
-%%% logging, counting or sending data to trace collectors can be modified
-%%% on the running system based on the changing operational requirements.
-%%%
-%%% The span filter works with key value pair lists. This was the
-%%% easiest to implement and reasonably fast.
-%%%
-%%% Filter rules are composed by a list of `{Conditions, Actions}' tuples.
-%%% Processing a span means iterating through this list and when an item
-%%% found where all `Conditions' evaluate to true then the `Actions' in that
-%%% item are executed.
-%%%
-%%% `Conditions' operate on a copy of the tags of the span. It is a
-%%% sequence of checks against the tags (e.g. key present, key value)
-%%% where if any check in the sequence fails, the associated actions are
-%%% not executed and the next `{Conditions, Actions}' item is evaluated.
-%%% `Actions' can trigger e.g. counting a particular tag value combination,
-%%% logging, sending the span to trace collectors, modifying the working
-%%% (i.e. used for further conditions) tag list, modifying the span tag
-%%% list that is to be sent to trace collector. `Actions' can also
-%%% influence the further evaluation of the rules i.e. providing the
-%%% break action instructs the rule engine NOT to look further in the
-%%% list of `{Conditions, Actions}'.
-%%%
-%%% `Evaluation' of the rules happens in the process which invokes the span
-%%% end statement (e.g. @link otter:finish/1.) i.e. it has impact on the
-%%% request processing time. Therefore the actions that consume little
-%%% time and resources with no external interfaces (e.g. counting in ets)
-%%% can be done during the evaluation of the rules, but anything that has
-%%% external interface or dependent on environment (e.g. logging and trace
-%%% collecting) should be done asynchronously.
-%%% @end
-%%%-------------------------------------------------------------------
-
 -module(otter_filter).
--export([
-         span/1
-        ]).
+-export([span/1]).
 
--include("otter.hrl").
+-include_lib("otter_lib/src/otter.hrl").
 
-%%--------------------------------------------------------------------
-%% @doc Takes a span as input, evaluates rules specified in
-%% configuration and executes any specified actions.
-%% @end
-%% --------------------------------------------------------------------
 -spec span(span()) -> ok.
-span(#span{tags = Tags, name = Name, duration = Duration} = Span) ->
-    Rules = otter_config:read(filter_rules, []),
-    rules(Rules, [
-        {otter_span_name, Name},
-        {otter_span_duration, Duration}|
-        Tags
-    ], Span).
+span(Span) ->
+    case otter_config:read(filter_rules, []) of
+        [{_,_}|_] = Rules ->
+            run_rules(Span, Rules);
+        {Module, Function, ExtraArgs} ->
+            {NewSpan, Actions} = Module:Function(Span, ExtraArgs),
+            [action(NewSpan, Action) || Action <- Actions],
+            ok;
+        [] ->
+            ok
+    end.
 
-rules([{Conditions, Actions} | Rest], Tags, Span) ->
-    case check_conditions(Conditions, Tags) of
-        false ->
-            rules(Rest, Tags, Span);
-        true ->
-            case do_actions(Actions, Tags, Span) of
-                break ->
-                    ok;
-                {continue, NewTags, NewSpan} ->
-                    rules(Rest, NewTags, NewSpan)
-            end
-    end;
-rules(_, _, _) ->
-    ok.
+run_rules(Span, Rules) ->
+    Tags = make_rule_tags(Span),
+    Actions = otter_lib_filter:run(Tags, Rules, break),
+    do_actions(Span, Tags, Actions).
 
-check_conditions([Condition | Rest], Tags) ->
-    case check(Condition, Tags) of
-        true ->
-            check_conditions(Rest, Tags);
-        false ->
-            false
-    end;
-check_conditions([], _) ->
-    true.
-
-check({negate, Condition}, Tags) ->
-    not check(Condition, Tags);
-check({value, Key, Value}, Tags) ->
-    case lists:keyfind(Key, 1, Tags) of
-        {Key, Value} ->
-            true;
-        _ ->
-            false
-    end;
-check({same, Key1, Key2}, Tags) ->
-    case lists:keyfind(Key1, 1, Tags) of
-        {Key1, Value} ->
-            case lists:keyfind(Key2, 1, Tags) of
-                {Key2, Value} ->
-                    true;
-                _ ->
-                    false
-            end;
-        _ ->
-            false
-    end;
-check({greater, Key, Value}, Tags) ->
-    case lists:keyfind(Key, 1, Tags) of
-        {Key, Value1} when Value1 > Value  ->
-            true;
-        _ ->
-            false
-    end;
-check({less, Key, Value}, Tags) ->
-    case lists:keyfind(Key, 1, Tags) of
-        {Key, Value1} when Value1 < Value  ->
-            true;
-        _ ->
-            false
-    end;
-check({between, Key, Value1, Value2}, Tags) ->
-    case lists:keyfind(Key, 1, Tags) of
-        {Key, Value} when Value > Value1 andalso Value < Value2  ->
-            true;
-        _ ->
-            false
-    end;
-check({present, Key}, Tags) ->
-    lists:keymember(Key, 1, Tags);
-check(_, _) ->
-    false.
-
-do_actions(Actions, Tags, Span) ->
-    do_actions(Actions, Tags, Span, continue).
-
-do_actions([break | Rest], Tags, Span, _BreakOrContinue) ->
-    do_actions(Rest, Tags, Span, break);
-do_actions([continue | Rest], Tags, Span, _BreakOrContinue) ->
-    do_actions(Rest, Tags, Span, continue);
-do_actions([Action | Rest], Tags, Span, BreakOrContinue) ->
-    do_actions(Rest, action(Action, Tags, Span), Span, BreakOrContinue);
-do_actions([], _Tags, _Span, break) ->
-    break;
-do_actions([], Tags, Span, continue) ->
-    {continue, Tags, Span}.
-
-action(send_to_zipkin, Tags, Span) ->
-    otter_conn_zipkin:store_span(Span),
-    Tags;
-action({snapshot_count, Prefix, TagNames}, Tags, Span) ->
-    TagValues = [
+do_actions(Span, Tags, [{snapshot_count, Prefix, TagNames} | Rest]) ->
+    SnapCountKey = Prefix ++ [
         case lists:keyfind(Key, 1, Tags) of
             {Key, Value} -> Value;
             _ -> undefined
         end ||
         Key <- TagNames
     ],
-    otter_snapshot_count:snapshot(Prefix ++ TagValues, Span),
-    Tags;
-action(_, Tags, _) ->
-    Tags.
+    action(Span, {snapshot_count, SnapCountKey}),
+    do_actions(Span, Tags, Rest);
+do_actions(Span, Tags, [Action | Rest]) ->
+    action(Span, Action),
+    do_actions(Span, Tags, Rest);
+do_actions(_Span, _Tags, []) ->
+    ok.
+
+action(Span, {snapshot_count, Key}) ->
+    otter_lib_snapshot_count:snapshot(Key, Span);
+action(Span, send_to_zipkin) ->
+    otter_conn_zipkin:store_span(Span);
+action(Span, UnknownAction) ->
+    otter_lib_snapshot_count:snapshot(unknown_filter_action, {UnknownAction, Span}),
+    unknown_filter_action.
+
+make_rule_tags(#span{tags = Tags, name = Name, duration = Duration}) ->
+    [
+        {otter_span_name, Name},
+        {otter_span_duration, Duration}|
+        Tags
+    ].

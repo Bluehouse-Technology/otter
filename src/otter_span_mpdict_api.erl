@@ -23,15 +23,15 @@
 %%% @end
 %%%-------------------------------------------------------------------
 
--module(otter_span_pdict_api).
+-module(otter_span_mpdict_api).
 -export([
          start/1, start/2, start/3,
-         finish/0, finish/1,
-         get_span/0,
+         finish/1,
+         get_span/1,
          put_span/1,
-         ids/0, ids/1,
-         log/1, log/2,
-         tag/2, tag/3
+         ids/1,
+         log/2, log/3,
+         tag/3, tag/4
         ]).
 
 -include_lib("otter_lib/src/otter.hrl").
@@ -39,70 +39,58 @@
 -spec start(info()) -> span().
 start(Name) ->
     Span = otter_lib_span:start(Name),
-    put(otter_span_information, Span),
+    put({otter_span_information, Name}, Span),
     Span.
 
 
 -spec start(info(), trace_id()) -> span().
 start(Name, TraceId) when is_integer(TraceId) ->
     Span = otter_lib_span:start(Name, TraceId),
-    put(otter_span_information, Span),
+    put({otter_span_information, Name}, Span),
     Span.
 
 -spec start(info(), trace_id(), span_id()) -> span().
 start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
     Span = otter_lib_span:start(Name, TraceId, ParentId),
-    put(otter_span_information, Span),
+    put({otter_span_information, Name}, Span),
     Span.
 
--spec tag(info(), info()) -> span().
-tag(Key, Value) ->
-    Span = otter_lib_span:tag(get(otter_span_information), Key, Value),
-    put(otter_span_information, Span),
+-spec tag(info(), info(), info()) -> span().
+tag(Name, Key, Value) ->
+    Span = otter_lib_span:tag(get({otter_span_information, Name}), Key, Value),
+    put({otter_span_information, Name}, Span),
     Span.
 
--spec tag(info(), info(), service()) -> span().
-tag(Key, Value, Service) ->
-    Span = otter_lib_span:tag(get(otter_span_information), Key, Value, Service),
-    put(otter_span_information, Span),
+-spec tag(info(), info(), info(), service()) -> span().
+tag(Name, Key, Value, Service) ->
+    Span = otter_lib_span:tag(get({otter_span_information, Name}), Key, Value, Service),
+    put({otter_span_information, Name}, Span),
     Span.
 
--spec log(info()) -> span().
-log(Text) ->
-    Span = otter_lib_span:log(get(otter_span_information), Text),
-    put(otter_span_information, Span),
+-spec log(info(), info()) -> span().
+log(Name, Text) ->
+    Span = otter_lib_span:log(get({otter_span_information, Name}), Text),
+    put({otter_span_information, Name}, Span),
     Span.
 
-
--spec log(info(), service()) -> span().
-log(Text, Service) ->
-    Span = otter_lib_span:log(get(otter_span_information), Text, Service),
-    put(otter_span_information, Span),
+-spec log(info(), info(), service()) -> span().
+log(Name, Text, Service) ->
+    Span = otter_lib_span:log(get({otter_span_information, Name}), Text, Service),
+    put({otter_span_information, Name}, Span),
     Span.
 
--spec finish() -> ok.
-finish() ->
-    otter_filter:span(otter_lib_span:finish(get(otter_span_information))).
+-spec finish(info()) -> ok.
+finish(Name) ->
+    otter_filter:span(otter_lib_span:finish(get({otter_span_information, Name}))).
 
+-spec ids(info()) -> {trace_id(), span_id()}.
+ids(Name) ->
+    otter_lib_span:get_ids(get({otter_span_information, Name})).
 
--spec finish(span()) -> ok.
-%% @doc This is provided purely for API compatibility with the otter_span_api module
-finish(#span{} = _Span) ->
-    finish().
-
--spec ids() -> {trace_id(), span_id()}.
-ids() ->
-    otter_lib_span:get_ids(get(otter_span_information)).
-
--spec ids(span()) -> {trace_id(), span_id()}.
-%% @doc This is provided purely for API compatibility with the otter_span_api module
-ids(#span{} = _Span) ->
-    ids().
-
--spec get_span() -> span().
-get_span() ->
-    get(otter_span_information).
+-spec get_span(info()) -> span().
+get_span(Name) ->
+    get({otter_span_information, Name}).
 
 -spec put_span(span()) -> term().
 put_span(Span) ->
-    put(otter_span_information, Span).
+    put({otter_span_information, otter_lib_span:get_name(Span)}, Span).

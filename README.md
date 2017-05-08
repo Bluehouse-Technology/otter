@@ -399,7 +399,7 @@ conditions.
 example: check whether the span duration is greater than 5 seconds
 
 ```erlang
-    {greater, "otter_span_duration", 5000000}
+    {greater, otter_span_duration, 5000000}
 ```
 
 ##### Negate condition check

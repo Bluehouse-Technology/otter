@@ -45,7 +45,7 @@
 %%% `counter_snapshot/1'<br/>
 %%% `counter_delete/1'<br/>
 %%% `counter_delete_all/0'<br/>
-%%% 
+%%%
 %%% == Config API ==
 %%% The default implementation uses the application environment to
 %%% store configuration. There is a simple wrapper module to interface
@@ -66,7 +66,7 @@
 %%%-------------------------------------------------------------------
 
 -module(otter).
--include("otter.hrl").
+-include_lib("otter_lib/src/otter.hrl").
 
 -export([
          %% Span API
@@ -91,12 +91,12 @@
 
 %%--------------------------------------------------------------------
 %% @doc Starts a span with the specified name. Automatically generates
-%% a TraceId.  
+%% a TraceId.
 %% @end
 %%--------------------------------------------------------------------
 -spec start(info()) -> span().
 start(Name) ->
-    otter_span:fstart(Name).
+    otter_lib_span:start(Name).
 
 %%--------------------------------------------------------------------
 %% @doc Starts a span with the specified name and TraceId or name and
@@ -105,29 +105,29 @@ start(Name) ->
 %% --------------------------------------------------------------------
 -spec start(info(), integer() | #span{}) -> span().
 start(Name, TraceId) when is_integer(TraceId) ->
-    otter_span:fstart(Name, TraceId);
+    otter_lib_span:start(Name, TraceId);
 start(Name, #span{} = ParentSpan) ->
     {TraceId, ParentId} = ids(ParentSpan),
-    otter_span:fstart(Name, TraceId, ParentId).
+    otter_lib_span:start(Name, TraceId, ParentId).
 
 %%--------------------------------------------------------------------
 %% @doc Starts a child span with the specified name, TraceId and
-%% ParentId 
+%% ParentId
 %% @end
 %% --------------------------------------------------------------------
 -spec start(info(), integer(), integer()) -> span().
 start(Name, TraceId, ParentId) when is_integer(TraceId),
                                     is_integer(ParentId) ->
-    otter_span:fstart(Name, TraceId, ParentId).
+    otter_lib_span:start(Name, TraceId, ParentId).
 
 %%--------------------------------------------------------------------
 %% @doc Adds a tag to a span. If the tag already exists, its value
-%% will be overwritten 
+%% will be overwritten
 %% @end
 %% --------------------------------------------------------------------
 -spec tag(span(), info(), info()) -> span().
 tag(#span{} = Span, Key, Value) ->
-    otter_span:ftag(Span, Key, Value).
+    otter_lib_span:tag(Span, Key, Value).
 
 %%--------------------------------------------------------------------
 %% @doc Adds a tag to a span with a given service. If the tag already
@@ -136,7 +136,7 @@ tag(#span{} = Span, Key, Value) ->
 %% --------------------------------------------------------------------
 -spec tag(span(), info(), info(), service()) -> span().
 tag(#span{} = Span, Key, Value, Service) ->
-    otter_span:ftag(Span, Key, Value, Service).
+    otter_lib_span:tag(Span, Key, Value, Service).
 
 %%--------------------------------------------------------------------
 %% @doc Adds a log message to a span
@@ -144,11 +144,11 @@ tag(#span{} = Span, Key, Value, Service) ->
 %% --------------------------------------------------------------------
 -spec log(span(), info()) -> span().
 log(#span{} = Span, Text) ->
-    otter_span:flog(Span, Text).
+    otter_lib_span:log(Span, Text).
 
 -spec log(span(), info(), service()) -> span().
 log(#span{} = Span, Text, Service) ->
-    otter_span:flog(Span, Text, Service).
+    otter_lib_span:log(Span, Text, Service).
 
 %%--------------------------------------------------------------------
 %% @doc Ends a span and prepares it for potential delivery to the
@@ -157,7 +157,8 @@ log(#span{} = Span, Text, Service) ->
 %% --------------------------------------------------------------------
 -spec finish(span()) -> ok.
 finish(#span{} = Span) ->
-    otter_span:fend(Span).
+    otter_filter:span(otter_lib_span:finish(Span)).
+
 
 %%--------------------------------------------------------------------
 %% @doc Returns the TraceId and SpanId for a given span.
@@ -165,24 +166,24 @@ finish(#span{} = Span) ->
 %% --------------------------------------------------------------------
 -spec ids(span()) -> {trace_id(), span_id()}.
 ids(#span{} = Span) ->
-    otter_span:fget_ids(Span).
+    otter_lib_span:get_ids(Span).
 
 
--spec counter_list() -> [{list(), integer()}].
+-spec counter_list() -> [{term(), integer()}].
 counter_list() ->
-    otter_snapshot_count:list_counts().
+    otter_lib_snapshot_count:list_counts().
 
--spec counter_snapshot(list()) -> term().
+-spec counter_snapshot(term()) -> term().
 counter_snapshot(Key) ->
-    otter_snapshot_count:get_snap(Key).
+    otter_lib_snapshot_count:get_snap(Key).
 
--spec counter_delete(list()) -> ok.
+-spec counter_delete(term()) -> ok.
 counter_delete(Key) ->
-    otter_snapshot_count:delete_counter(Key).
+    otter_lib_snapshot_count:delete_counter(Key).
 
 -spec counter_delete_all() -> ok.
 counter_delete_all() ->
-    otter_snapshot_count:delete_all_counters().
+    otter_lib_snapshot_count:delete_all_counters().
 
 
 
