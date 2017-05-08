@@ -1,8 +1,8 @@
-#Changes
+# Changes
 
 ## 0.2.0 - 0.3.0
 
-###Separate common otter functions to **otter_lib** application
+### Separate common otter functions to **otter_lib** application
 This change is part of the implementation of issue #16
 
 #### span data structure wrapper *otter_lib_span*
@@ -43,21 +43,21 @@ library so in order to initialize the public ETS tables, *sup_init/0*
 should be called from a persistent process (e.g. an application supervisor).
 The module also contains functions to read/delete the counters and snapshots.
 
-###Remove cowboy as a dependency
+### Remove cowboy as a dependency
 Cowboy was used as a dependency only for testing purposes. With the separation
 of **otter_lib** application, the server functionality is being moved to
 another application **otter_server** which then can be used as testing
 dependency for otter if needed. This change is part of the fix for issue #16 .
 
-###Create new API module **otter_span_mpdict_api**
+### Create new API module **otter_span_mpdict_api**
 New otter API for span generation. This implements the mechanism described
 in issue #14.
 
-###Create new API module **otter_span_id_api**
+### Create new API module **otter_span_id_api**
 New otter API for span generation. This implements the separate span
 process mechanism described in issue #13.
 
-###Allow external filter engine
+### Allow external filter engine
 In this version the configuration parameter **filter_rules** can also
 have the value **{Module, Function, ExtraArg}**. If this format is used
 then the following call is made for each span.
@@ -73,7 +73,7 @@ Any other return value means that the span will be discarded.
 Currently otter supports actions **{snapshot_count, Key}** and **send_to_zipkin**.
 Any other term not understood by otter as an action is ignored.
 
-###New rule condition **{one_out_of, N}**
+### New rule condition **{one_out_of, N}**
 The otter filter library now contains an additional condition **{one_out_of, N}**.
 This condition uses crypto:rand_uniform(0, N) and if the generated number is 0
 then returns true, otherwise returns false.
