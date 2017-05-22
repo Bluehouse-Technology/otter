@@ -83,7 +83,7 @@ start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
 %% dictionary of the current process and invoke the pre filter
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), Tags :: [{info(), info()}]) -> span().
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
 start_with_tags(Name, Tags) ->
     pre_filter(otter_lib_span:start_with_tags(Name, Tags)).
 
@@ -93,12 +93,12 @@ start_with_tags(Name, Tags) ->
 %% span.
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: trace_id(), Tags :: [{info(), info()}]) -> span();
-                     (Name :: info(), ParentSpan :: span(), Tags :: [{info(), info()}]) -> span().
-start_with_tags(Name, #span{trace_id = TraceId, id = ParentId}, Tags) ->
-    pre_filter(otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags));
-start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
-    pre_filter(otter_lib_span:start_with_tags(Name, TraceId, Tags)).
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span();
+                     (Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> span().
+start_with_tags(Name, Tags, #span{trace_id = TraceId, id = ParentId}) ->
+    pre_filter(otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId));
+start_with_tags(Name, Tags, TraceId) when is_integer(TraceId) ->
+    pre_filter(otter_lib_span:start_with_tags(Name, Tags, TraceId)).
 
 %%----------------------------------------------------------------------
 %% @doc start a new span with a list of tags on the process
@@ -106,9 +106,9 @@ start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
 %% parent_id
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: trace_id(), ParentId :: span_id(), Tags :: [{info(), info()}]) -> span().
-start_with_tags(Name, TraceId, ParentId, Tags) when is_integer(TraceId), is_integer(ParentId) ->
-    pre_filter(otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags)).
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> span().
+start_with_tags(Name, Tags, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
+    pre_filter(otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId)).
 
 
 %%----------------------------------------------------------------------

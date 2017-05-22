@@ -74,7 +74,7 @@ start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
 %% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), Tags :: [{info(), info()}]) -> span().
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> pid() | undefined.
 start_with_tags(Name, Tags) ->
     Span = otter_lib_span:start_with_tags(Name, Tags),
     case otter_filter:pre_span(Span) of
@@ -91,18 +91,18 @@ start_with_tags(Name, Tags) ->
 %% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: trace_id(), Tags :: [{info(), info()}]) -> span();
-                     (Name :: info(), ParentSpan :: span(), Tags :: [{info(), info()}]) -> span().
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> pid() | undefined;
+                     (Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> pid() | undefined.
 start_with_tags(Name, #span{trace_id = TraceId, id = ParentId}, Tags) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags),
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     case otter_filter:pre_span(Span) of
         NewSpan when ?is_span_active(NewSpan) ->
             span_process(NewSpan);
         _ ->
             undefined
     end;
-start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, Tags),
+start_with_tags(Name, Tags, TraceId) when is_integer(TraceId) ->
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId),
     case otter_filter:pre_span(Span) of
         NewSpan when ?is_span_active(NewSpan) ->
             span_process(NewSpan);
@@ -118,9 +118,9 @@ start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
 %% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: trace_id(), ParentId :: span_id(), Tags :: [{info(), info()}]) -> span().
-start_with_tags(Name, TraceId, ParentId, Tags) when is_integer(TraceId), is_integer(ParentId) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags),
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> pid() | undefined.
+start_with_tags(Name, Tags, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     case otter_filter:pre_span(Span) of
         NewSpan when ?is_span_active(NewSpan) ->
             span_process(NewSpan);

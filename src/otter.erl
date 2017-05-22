@@ -145,19 +145,20 @@ start(Name, TraceId, ParentId) when is_integer(TraceId),
 %% Automatically generates a trace id and invokes pre filtering.
 %% @end
 %%--------------------------------------------------------------------
--spec start_with_tags(Name :: info(), Tags :: [{info(), info()}]) -> span().
+%% TODO Figure out why dialyzer doesn't like this spec : -spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
 start_with_tags(Name, Tags) ->
     Span = otter_lib_span:start(Name, Tags),
     otter_filter:pre_span(Span).
 
 %%--------------------------------------------------------------------
-%% @doc Starts a span with the specified name t span
+%% @doc Starts a span with the specified name, initial tags and
+%% trace id or a parent span
 %% @end
 %% --------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: integer(), Tags :: [{info(), info()}]) -> span();
-                     (Name :: info(), Span :: span(), Tags :: [{info(), info()}]) -> span().
-start_with_tags(Name, #span{trace_id = TraceId, id = ParentId}, Tags) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags),
+-spec start_with_tags(Name :: info(), Tags :: [tag()], Span :: span()) -> span();
+                     (Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+start_with_tags(Name, Tags, #span{trace_id = TraceId, id = ParentId}) ->
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     otter_filter:pre_span(Span);
 
 %%--------------------------------------------------------------------
@@ -165,8 +166,8 @@ start_with_tags(Name, #span{trace_id = TraceId, id = ParentId}, Tags) ->
 %% ParentSpan
 %% @end
 %% --------------------------------------------------------------------
-start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, Tags),
+start_with_tags(Name, Tags, TraceId) when is_integer(TraceId) ->
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId),
     otter_filter:pre_span(Span).
 
 
@@ -175,10 +176,10 @@ start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
 %% ParentId
 %% @end
 %% --------------------------------------------------------------------
--spec start_with_tags(Name :: info(), TraceId :: integer(), ParentId :: integer(), Tags :: [{info(), info()}]) -> span().
-start_with_tags(Name, TraceId, ParentId, Tags) when is_integer(TraceId),
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> span().
+start_with_tags(Name, Tags, TraceId, ParentId) when is_integer(TraceId),
                                                     is_integer(ParentId) ->
-    Span = otter_lib_span:start_with_tags(Name, TraceId, ParentId, Tags),
+    Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     otter_filter:pre_span(Span).
 
 %%--------------------------------------------------------------------
