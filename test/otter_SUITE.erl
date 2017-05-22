@@ -189,14 +189,14 @@ idtest_prefilter(_Config) ->
 %% This might deserve a more proper test. Looking at the spread of some
 %% manual tests I believe on a much larger sample it converges fairly close
 %% to the desired selection. The +-20% here is for the sake of keeping this
-%% test ok for now.
+%% test (probably/mostly) ok for now.
 filter_one_out_of(_Config) ->
     L = length([
         1 || [ok] <- [
             otter_lib_filter:run(
                 [{tag1, value1}],
-                [{[{one_out_of, 100}], [ok]}]
-            ) || _ <- lists:seq(1, 10000)
+                [{[{one_out_of, 1000}], [ok]}]
+            ) || _ <- lists:seq(1, 100000)
         ]
     ]),
     true = if L < 120 andalso L > 80 -> true; true -> false end.
