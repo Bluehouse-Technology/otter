@@ -93,7 +93,7 @@ start_with_tags(Name, Tags) ->
 %%----------------------------------------------------------------------
 -spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> pid() | undefined;
                      (Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> pid() | undefined.
-start_with_tags(Name, #span{trace_id = TraceId, id = ParentId}, Tags) ->
+start_with_tags(Name, Tags,  #span{trace_id = TraceId, id = ParentId}) ->
     Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     case otter_filter:pre_span(Span) of
         NewSpan when ?is_span_active(NewSpan) ->
