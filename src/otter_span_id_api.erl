@@ -71,7 +71,7 @@ start(Name, TraceId, ParentId) when is_integer(TraceId), is_integer(ParentId) ->
 %%----------------------------------------------------------------------
 %% @doc Start a new span with a list of tags and pass it to pre filtering.
 %% If the span is active then start a span collection process. For inactive
-%% span the atom `undefined` is returned instead of the PID.
+%% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
 -spec start_with_tags(Name :: info(), Tags :: [{info(), info()}]) -> span().
@@ -88,7 +88,7 @@ start_with_tags(Name, Tags) ->
 %% @doc Start a new span with a list of tags and a trace id or parent span
 %% and pass it to pre filtering.
 %% If the span is active then start a span collection process. For inactive
-%% span the atom `undefined` is returned instead of the PID.
+%% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
 -spec start_with_tags(Name :: info(), TraceId :: trace_id(), Tags :: [{info(), info()}]) -> span();
@@ -115,7 +115,7 @@ start_with_tags(Name, TraceId, Tags) when is_integer(TraceId) ->
 %% @doc Start a new span with a list of tags, a trace id and parent span id
 %% then pass it to pre filtering.
 %% If the span is active then start a span collection process. For inactive
-%% span the atom `undefined` is returned instead of the PID.
+%% span the atom `undefined' is returned instead of the PID.
 %% @end
 %%----------------------------------------------------------------------
 -spec start_with_tags(Name :: info(), TraceId :: trace_id(), ParentId :: span_id(), Tags :: [{info(), info()}]) -> span().
@@ -185,7 +185,7 @@ finish(Pid) ->
 
 %%----------------------------------------------------------------------
 %% @doc Get the trace id and span id from a span. If the span is inactive
-%% it returns the tuple {0,0}
+%% it returns the tuple `{0,0}'
 %% @end
 %%----------------------------------------------------------------------
 -spec ids(Pid :: pid()|undefined) -> {trace_id(), span_id()}.
@@ -218,10 +218,10 @@ span_process(Span) ->
 
 span_process(Span, Timeout) ->
     receive
-        {tag, Tag} ->
-            span_process(otter_lib_span:tag(Span, Tag), Timeout);
-        {tag, Tag, Service} ->
-            span_process(otter_lib_span:tag(Span, Tag, Service), Timeout);
+        {tag, Key, Value} ->
+            span_process(otter_lib_span:tag(Span, Key, Value), Timeout);
+        {tag, Key, Value, Service} ->
+            span_process(otter_lib_span:tag(Span, Key, Value, Service), Timeout);
         {log, Text} ->
             span_process(otter_lib_span:log(Span, Text), Timeout);
         {log, Text, Service} ->
