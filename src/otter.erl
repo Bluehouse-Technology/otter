@@ -28,7 +28,7 @@
 %%% The module exposes the functional span API.
 %%% These API calls allow you to create and manage spans. These are:<br/>
 %%% `start/1, start/2, start/3'<br/>
-%%% `start_with_tags/2, start_with_tags/3, start_with_tags/4'<
+%%% `start_with_tags/2, start_with_tags/3, start_with_tags/4'<br/>
 %%% `finish/1' <br/>
 %%% `ids/1' <br/>
 %%% `log/2, log/3' <br/>
@@ -75,7 +75,7 @@
 %%% environment, so the write function is NOT persistent. In case of node
 %%% restart and/or application reload the configuration will be reset to
 %%% whatever environment is defined in the release (sys) config or app
-%%% file. There is an example configuration provided in the `otter.app'
+%%% file. There is an example configuration provided in the `otter.app`
 %%% file as a reference. These are:<br/>
 %%% `config_list/0'<br/>
 %%% `config_read/1'<br/>
