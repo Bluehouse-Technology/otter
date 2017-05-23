@@ -80,7 +80,7 @@ trace collector (Zipkin) and also counting and keeping a snapshot of the last
 occurrence of a span.
 
 
-![otter flow](doc/images/otter_flow.png)
+![otter flow](docs/images/otter_flow.png)
 
 
 ### Producing span information
