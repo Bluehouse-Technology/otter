@@ -76,7 +76,7 @@ id's are passed across the systems is left to the particular implementation.
 
 OTTER helps producing span information, filtering spans both when the span
 is started (prefiltering) and when the span is completed, sending to
-trace collector (Zipkin) and also counting and keeping a snapshot of the last
+trace collector (Zipkin) and also counting/keeping a snapshot of the last
 occurrence of a span.
 
 
