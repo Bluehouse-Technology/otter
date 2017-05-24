@@ -23,8 +23,11 @@ environment.
 [ibrowse](https://github.com/cmullaparthi/ibrowse) HTTP client is used
 to send the HTTP/Thrift requests to Zipkin.
 
-[cowboy](https://github.com/ninenines/cowboy) HTTP server (version 1.x API)
-is used to receive HTTP/Thrift (Zipkin binary format).
+[otter_lib](https://github.com/Bluehouse-Technology/otter_lib) Common
+library functions shared for otter and [otter_srv](https://github.com/Bluehouse-Technology/otter_srv)
+
+Test dependency : [otter_srv](https://github.com/Bluehouse-Technology/otter_srv)
+
 
 ## OpenTracing
 
@@ -71,8 +74,9 @@ id's are passed across the systems is left to the particular implementation.
 
 ## OTTER functionality
 
-OTTER helps producing span information, filtering spans, sending to
-trace collector (Zipkin) and also counting and keeping a snapshot of the last
+OTTER helps producing span information, filtering spans both when the span
+is started (prefiltering) and when the span is completed, sending to
+trace collector (Zipkin) and also counting/keeping a snapshot of the last
 occurrence of a span.
 
 
@@ -82,168 +86,310 @@ occurrence of a span.
 ### Producing span information
 
 The main motivation behind the span collection of Otter is to make the
-instrumentation of existing code as simple as possible.
+instrumentation of existing code as simple as possible. Otter includes 4
+different APIs for this.
+
+- Basic functional API
+
+- Simple process dictionary API (for managing 1 span on the process dictionary)
+
+- Multi span process dictionary API (for managing multiple spans with different names)
+
+- Span ID API that manages a span in a separate process
+
 
 #### Types used in the API
 
-The following type specifications are in otter.hrl
+The following type specifications are in otter.hrl, which is part of the
+otter_lib application.
 
 ```erlang
--type time_us() :: integer().           % timestamp in microseconds
+-type time_us() :: non_neg_integer().               % timestamp in microseconds
 -type info()    :: binary() | iolist() | atom() | integer().
--type ip4()     :: {integer(), integer(), integer(), integer()}.
--type service() :: binary() | list() | default | {binary() | list(), ip4(), integer()}.
--type trace_id():: integer().
--type span_id() :: integer().
+-type ip4()     :: {non_neg_integer(), non_neg_integer(), non_neg_integer(), non_neg_integer()}.
+-type service() :: binary() | list() | default | {binary() | list(), ip4(), non_neg_integer()}.
+-type trace_id():: non_neg_integer().
+-type span_id() :: non_neg_integer().
+-type action()  :: atom() | tuple().
+-type tag()     :: {info(), info()} | {info(), info(), service()}.
+-type log()     :: {time_us(), info()} | {time_us(), info(), service()}.
 
--record(span , {
-    timestamp   :: time_us(),           % timestamp of starting the span
-    trace_id    :: trace_id(),          % 64 bit integer trace id
-    name        :: info(),              % name of the span
-    id          :: span_id(),           % 64 bit integer span id
-    parent_id   :: span_id() | undefined, % 64 bit integer parent span id
-    tags = []   :: [{info(), info()} | {info(), info(), service()}],  % span tags
-    logs = []   :: [{time_us(), info()} | {info(), info(), service()}], % span logs
-    duration    :: time_us()            % microseconds between span start/end
-}).
+-record(span, {
+          timestamp       :: time_us()  | undefined,% timestamp of starting the span
+          trace_id        :: trace_id() | undefined,% 64 bit integer trace id
+          name            :: info()     | undefined,% name of the span
+          id              :: span_id()  | undefined,% 64 bit integer span id
+          parent_id       :: span_id()  | undefined,% 64 bit integer parent span id
+          tags = []       :: [tag()],               % span tags
+          logs = []       :: [log()],               % span logs
+          duration        :: time_us()  | undefined % microseconds between span start/end
+         }).
 
 -type span()    :: #span{}.
-
 ```
 
 #### Functional API
 
-Passing the span structure between requests, this API will probably
-require to pass the span in function calls if the function has
+The functional API is exposed in the ```otter``` module.
+
+This API is provided as a basic method for manipulating span information.
+Since it requires to pass the span data in function calls if the function has
 something to add to the span. This requires more code changes, however
 when functions pass non-strict composite structures (e.g. maps or
 proplists) then inserting the span information is more or less trivial.
+Very likely this is the least practical API for direct use, however it is
+purely functional and could/should be used as a base for other APIs.
 
 Start span with name only. Name should refer e.g. to the interface.
+
 ```erlang
--spec span_start(info()) -> span().
+spec start(Name :: info()) -> span().
 ```
 
-Start span with name and trace_id where trace_id e.g. received from
+Start span with name and a parent span, the trace id and the parent span.
+Trace id and parent id are taken from the parent span.
+
+```erlang
+-spec start(Name :: info(), ParentSpan :: span()) -> span().
+
+```
+
+Start span with name and trace id where trace id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer()) -> span().
+-spec start(Name :: info(), TraceId :: trace_id()) -> span().
+
 ```
 
-Start span with name, trace_id and parent span id e.g. received from
+Start span with name, trace id and parent span id e.g. received from
 protocol.
 
 ```erlang
--spec span_start(info(), integer(), integer()) -> span().
+-spec start(Name :: info(), TraceId :: trace_id(), ParentId :: integer()) -> span().
+
+```
+
+Start a span with name and initial tags. This function triggers pre-filtering
+where the name and initial tags can be used to decide whether the span shall
+be active or inactive (see later at filtering).
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
+
+```
+
+Start a span with name, initial tags and a parent span. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
 ```
 
 Add a tag to the previously started span.
+
 ```erlang
--spec span_tag(span(), info(), info()) -> span().
+-spec tag(Span :: span(), Key :: info(), Value :: info()) -> span().
 ```
 
 Add a tag to the previously started span with additional service information.
+
 ```erlang
--spec span_tag(span(), info(), info(), service()) -> span().
+-spec tag(Span :: span(), Key :: info(), Value :: info(), Service :: service()) -> span().
+
 ```
 
 Add a log/event to the previously started span
+
 ```erlang
--spec span_log(span(), info()) -> span().
+-spec log(Span :: span(), Text :: info()) -> span().
+
 ```
 
 Add a log/event to the previously started span with additional service information0
+
 ```erlang
--spec span_log(span(), info(), service()) -> span().
+-spec log(Span :: span(), Text :: info(), Service :: service()) -> span().
+
 ```
 
 End span and invoke the span filter (see below)
+
 ```erlang
--spec span_end(span()) -> ok.
+-spec finish(Span :: span()) -> ok.
+
 ```
 
 Get span id's. Return the **trace_id** and the **span** id from the
 currently started span. This can be used e.g. when process "boundary" is
 to be passed and eventually new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
+
 ```erlang
--spec span_ids(span()) -> {trace_id(), span_id()}.
+-spec ids(Span :: span()) -> {trace_id(), span_id()}.
+
 ```
+
 example :
 
 ```erlang
     ...
-    Span = otter:span_start("radius request"),
+    Span = otter:start("radius request"),
     ...
     ...
-    Span1 = otter:span_tag(Span, "request_id", RequestId),
+    Span1 = otter:tag(Span, "request_id", RequestId),
     ...
     ...
-    Span2 = otter:span_plog(Span1, "invoke user db"),
+    Span2 = otter:log(Span1, "invoke user db"),
     ...
     ...
-    Span3 = otter:span_plog(Span2, "user db result"),
-    Span4 = otter:span_ptag(Span3, "user db result", "ok"),
+    Span3 = otter:log(Span2, "user db result"),
+    Span4 = otter:tag(Span3, "user db result", "ok"),
     ...
     ...
-    Span5 = otter:span_ptag(Span4, "final result", "error"),
-    Span6 = otter:span_ptag(Span5, "final result reason", "unknown user"),
-    otter:span_pend(Span6),
+    Span5 = otter:tag(Span4, "final result", "error"),
+    Span6 = otter:tag(Span5, "final result reason", "unknown user"),
+    otter:finish(Span6),
     ...
 ```
 
-#### Process API
+#### Simple process dictionary API
 
-The simplest API uses the process dictionary to store span information.
-This is probably the least work to implement in existing code.
+The simple process dictionary API is exposed in the ```otter_span_pdict_api```
+ module.
+
+This API uses the process dictionary to store span information.
+Since it manages the span in the process dictionary of the current process,
+it does not require to pass around any data, therefore this API is likely
+the easiest to implement in existing request handler process code. The
+limitations are that it is bound to a single process and that it can only
+manage 1 span.
 
 Start span with name only. Name should refer e.g. to the interface.
 
 ```erlang
--spec span_pstart(info()) -> ok.
+-spec start(Name :: info()) -> span().
 ```
 
-Start span with name and trace_id where trace_id e.g. received from
+Start span with name and trace id where trace id e.g. received from
 protocol.
 
 ```erlang
--spec span_pstart(info(), trace_id()) -> ok.
+-spec start(Name :: info(), TraceId :: trace_id()) -> span();
+
+```
+
+Start span with name and parent span. The trace id and parent id is taken
+from the parent span.
+
+```erlang
+-spec start(Name :: info(), ParentSpan :: span()) -> span();
+
+```
+
+Start span with name and trace id.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id()) -> span();
+
 ```
 
 Start span with name, trace_id and parent span id e.g. received from
 protocol.
 
 ```erlang
--spec span_pstart(info(), trace_id(), span_id()) -> ok.
+-spec start(Name :: info(), TraceId :: trace_id(), ParentId :: span_id()) -> span().
+
+```
+
+Start a span with name and initial tags. This function triggers pre-filtering
+where the name and initial tags can be used to decide whether the span shall
+be active or inactive (see later at filtering).
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
+
+```
+
+Start a span with name, initial tags and a parent span. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
 ```
 
 Add a tag to the previously started span.
 
 ```erlang
--spec span_ptag(info(), info()) -> ok.
+-spec tag(Key :: info(), Value :: info()) -> span().
+
 ```
 
 Add a tag to the previously started span with additional service information
 
 ```erlang
--spec span_ptag(info(), info(), service()) -> ok.
+-spec tag(Key :: info(), Value :: info(), Service :: service()) -> span().
+
 ```
 
 Add a log/event to the previously started span
+
 ```erlang
--spec span_plog(info()) -> ok.
+-spec log(Text :: info()) -> span().
+
 ```
 
 Add a log/event to the previously started span with additional service information
+
 ```erlang
--spec span_plog(info(), service()) -> ok.
+-spec log(Text :: info(), Service :: service()) -> span().
+
 ```
 
 
 End span and invoke the span filter (see below)
 ```erlang
--spec span_pend() -> ok.
+-spec finish() -> ok.
+
 ```
 
 Get span id's. Return the **trace_id** and the **span** id from the
@@ -252,36 +398,358 @@ to be passed and eventually new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
 
 ```erlang
--spec span_pids() -> {trace_id(), span_id()}.
+-spec ids() -> {trace_id(), span_id()}.
+
 ```
 
 Return the current span. e.g. it can be handed to another process to
 continue collecting span information using the functional API.
 
 ```
--spec span_pget() -> span().
+-spec get_span() -> span().
+
 ```
 
 example :
 
 ```erlang
     ...
-    otter:span_pstart("radius request"),
+    otter_span_pdict_api:start("radius request"),
     ...
     ...
-    otter:span_ptag("request_id", RequestId),
+    otter_span_pdict_api:tag("request_id", RequestId),
     ...
     ...
-    otter:span_plog("invoke user db"),
+    otter_span_pdict_api:log("invoke user db"),
     ...
     ...
-    otter:span_plog("user db result"),
-    otter:span_ptag("user_db_result", "ok"),
+    otter_span_pdict_api:log("user db result"),
+    otter_span_pdict_api:tag("user_db_result", "ok"),
     ...
     ...
-    otter:span_ptag("final_result", "error"),
-    otter:span_ptag("final_result_reason", "unknown user"),
-    otter:span_pend(),
+    otter_span_pdict_api:tag("final_result", "error"),
+    otter_span_pdict_api:tag("final_result_reason", "unknown user"),
+    otter_span_pdict_api:finish(),
+    ...
+```
+
+#### Multiple span process dictionary API
+
+The process dictionary API with support of multiple spans in a process is
+exposed in the ```otter_span_mpdict_api``` module.
+
+This API works similarly to the simple process dictionary API, only it
+stores the span information for each span name. i.e. it supports multiple
+spans with different names in a process. Since the names are (normally)
+static information, in ideal case this API also does not require extra
+data/variable to be passed around.
+
+Start span with name only. Name should refer e.g. to the interface.
+
+```erlang
+-spec start(Name :: info()) -> span().
+```
+
+Start span with name and trace id where trace id e.g. received from
+protocol.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id()) -> span();
+
+```
+
+Start span with name and parent span. The trace id and parent id is taken
+from the parent span.
+
+```erlang
+-spec start(Name :: info(), ParentSpan :: span()) -> span();
+
+```
+
+Start span with name and trace id.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id()) -> span();
+
+```
+
+Start span with name, trace_id and parent span id e.g. received from
+protocol.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id(), ParentId :: span_id()) -> span().
+
+```
+
+Start a span with name and initial tags. This function triggers pre-filtering
+where the name and initial tags can be used to decide whether the span shall
+be active or inactive (see later at filtering).
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
+
+```
+
+Start a span with name, initial tags and a parent span. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+
+```
+
+Add a tag to the previously started span.
+
+```erlang
+-spec tag(Name :: info(), Key :: info(), Value :: info()) -> span().
+
+```
+
+Add a tag to the previously started span with additional service information
+
+```erlang
+-spec tag(Name :: info(), Key :: info(), Value :: info(), Service :: service()) -> span().
+
+```
+
+Add a log/event to the previously started span
+
+```erlang
+-spec log(Name :: info(), Text :: info()) -> span().
+
+```
+
+Add a log/event to the previously started span with additional service information
+
+```erlang
+-spec log(Name :: info(), Text :: info(), Service :: service()) -> span().
+
+```
+
+
+End span and invoke the span filter (see below)
+```erlang
+-spec finish(Name :: info()) -> ok.
+
+```
+
+Get span id's. Return the **trace_id** and the **span** id from the
+currently started span. This can be used e.g. when process "boundary" is
+to be passed and eventually new span needs this information. Also when
+these id's should be passed to a protocol interface for another system
+
+```erlang
+-spec ids(Name :: info()) -> {trace_id(), span_id()}.
+
+```
+
+Return the current span. e.g. it can be handed to another process to
+continue collecting span information using the functional API.
+
+```
+-spec get_span(Name :: info()) -> span().
+
+```
+
+example :
+
+```erlang
+    ...
+    otter_span_mpdict_api:start("radius request"),
+    ...
+    ...
+    otter_span_mpdict_api:tag("radius request", "request_id", RequestId),
+    ...
+    ...
+    otter_span_mpdict_api:log("radius request", "invoke user db"),
+    ...
+    ...
+    otter_span_mpdict_api:log("radius request", "user db result"),
+    otter_span_mpdict_api:tag("radius request", "user_db_result", "ok"),
+    ...
+    ...
+    otter_span_mpdict_api:tag("radius request", "final_result", "error"),
+    otter_span_mpdict_api:tag("radius request", "final_result_reason", "unknown user"),
+    otter_span_mpdict_api:finish("radius request"),
+    ...
+```
+#### Span id API
+
+The Span id API is exposed from the ```otter_span_id_api``` module.
+
+This API spawns a separate process for each started span and uses the PID
+of this collector process to identify the span. API calls send messages to
+this process. If there are no messages (tag, log, finish) received for a
+time period configured in ```span_id_api_process_timeout``` otter application
+configuration parameter (in milliseconds, default 30000) then the process
+exits, all eventual subsequent span actions are ignored and the span is
+discarded. Advantage of this API could be that the PID does not change as
+it would with the functional API and it is not bound to a particular request
+process as the process dictionary APIs. Disadvantage is the increased
+resource consumption, especially the potentially large amount of additional
+processes spawned on a fairly busy system. Span pre-filtering could be used
+to help this.
+
+Start span with name only. Name should refer e.g. to the interface.
+
+```erlang
+-spec start(Name :: info()) -> pid().
+```
+
+Start span with name and trace id where trace id e.g. received from
+protocol.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id()) -> pid();
+
+```
+
+Start span with name and parent span. The trace id and parent id is taken
+from the parent span.
+
+```erlang
+-spec start(Name :: info(), ParentSpan :: span()) -> pid();
+
+```
+
+Start span with name and trace id.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id()) -> pid();
+
+```
+
+Start span with name, trace_id and parent span id e.g. received from
+protocol.
+
+```erlang
+-spec start(Name :: info(), TraceId :: trace_id(), ParentId :: span_id()) -> pid().
+
+```
+
+Start a span with name and initial tags. This function triggers pre-filtering
+where the name and initial tags can be used to decide whether the span shall
+be active or inactive (see later at filtering).
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()]) -> pid() | undefined.
+
+```
+
+Start a span with name, initial tags and a parent span. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], ParentSpan :: span()) -> pid() | undefined.
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> pid() | undefined.
+
+```
+
+Start a span with name, initial tags and a trace id. This function triggers
+pre-filtering.
+
+
+```erlang
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> pid() | undefined.
+
+```
+
+Add a tag to the previously started span.
+
+```erlang
+-spec tag(Pid :: pid() | undefined, Key :: info(), Value :: info()) -> ok.
+
+```
+
+Add a tag to the previously started span with additional service information
+
+```erlang
+-spec tag(Pid :: pid() | undefined, Key :: info(), Value :: info(), Service :: service()) -> ok.
+
+```
+
+Add a log/event to the previously started span
+
+```erlang
+-spec log(Pid :: pid() | undefined, Text :: info()) -> ok.
+
+```
+
+Add a log/event to the previously started span with additional service information
+
+```erlang
+-spec log(Pid :: pid() | undefined, Text :: info(), Service :: service()) -> ok.
+
+```
+
+
+End span and invoke the span filter (see below). If the span is inactive,
+the span is discarded.
+
+
+```erlang
+-spec finish(Pid :: pid() | undefined) -> ok.
+
+```
+
+Get span id's. Return the **trace_id** and the **span** id from the span.
+In case the span is inactive i.e. the Pid is undefined, this function
+returns the tuple ```{0, 0}```.
+
+```erlang
+-spec ids(Pid :: pid() | undefined) -> {trace_id(), span_id()}.
+
+```
+
+
+example :
+
+```erlang
+    ...
+    otter_span_mpdict_api:start("radius request"),
+    ...
+    ...
+    otter_span_mpdict_api:tag("radius request", "request_id", RequestId),
+    ...
+    ...
+    otter_span_mpdict_api:log("radius request", "invoke user db"),
+    ...
+    ...
+    otter_span_mpdict_api:log("radius request", "user db result"),
+    otter_span_mpdict_api:tag("radius request", "user_db_result", "ok"),
+    ...
+    ...
+    otter_span_mpdict_api:tag("radius request", "final_result", "error"),
+    otter_span_mpdict_api:tag("radius request", "final_result_reason", "unknown user"),
+    otter_span_mpdict_api:finish("radius request"),
     ...
 ```
 
@@ -329,6 +797,40 @@ The paramers mentioned above are functionally specific to the zipkin
 connector. It was simpler to explain them though in this context.
 
 ### Span Filtering
+
+#### Pre-filtering
+
+When a span is started with the ```start_with_tags``` function, it triggers
+pre-filtering with the otter_span_name and the initial tags provided in the
+function call.
+
+The filter is defined with the ```prefilter_rules``` otter application
+configuration and has the same syntax as normal filter rules at span
+completion. The same conditions can be used, however the actions are different.
+
+Prefilter actions can be : ```allow, discard, {snapshot_count, [...], [...]}```
+
+The logic of the prefilter is also different, as it stops at the first
+matching condition set and executes the actions found there. In final span
+filter, all rules are checked and all matching actions are collected/executed.
+
+When the prefilter has the action ```discard``` in the matched actions, the
+behaviour is dependent on the API.
+
+With the basic functional API, the span timestamp is set to 0 indicating
+that the span is inactive. Any subsequent action on an inactive span is
+ignored and the final filter is not triggered (i.e. the span is discarded).
+If ids are requested for an inactive span, the tuple ```{0,0}``` is returned.
+```otter.hrl``` in the ```otter_lib``` application defines the ```?is_span_active(Span)```
+macro that can be used in guards if necessary.
+
+With both process dictionary APIs the behaviour is similar to the functional API.
+
+The span id API does not start a span collection process for inactive spans,
+and returns ```undefined``` instead of the Pid. All subsequent span actions
+accept ```undefined``` Pid and in that case the action is ignored.
+
+#### Final filtering
 
 When the collection of **span** information is completed (i.e. span_pend
 or span_end/1 is called), filtering is invoked. Filtering is based on the
@@ -399,7 +901,7 @@ conditions.
 example: check whether the span duration is greater than 5 seconds
 
 ```erlang
-    {greater, "otter_span_duration", 5000000}
+    {greater, otter_span_duration, 5000000}
 ```
 
 ##### Negate condition check
@@ -413,6 +915,22 @@ example: Check if the final result is other than ok
 ```erlang
     {negate, {value, "final_result", "ok"}}
 ```
+
+##### One out of
+
+This condition uses a random generated number and in the range of 0 < X =< Integer,
+then checks for the value 1. This filter is typically meant for pre-filtering.
+
+```erlang
+    {one_out_of, Integer}
+```
+
+example: Match 1 out of 1000 requests
+
+```erlang
+    {one_out_of, 1000}
+```
+
 
 #### Filter Actions
 
@@ -445,29 +963,29 @@ This will produce a counter and snapshot with e.g. such key :
 
 ##### Send span to Zipkin
 
-This action triggers sending the span to Zipkin
+This action triggers sending the span to Zipkin. This action can only be
+used in final filter rules.
 
 ```erlang
     send_to_zipkin
 ```
 
-##### Stop evaluating further Condition/Action pairs
+##### Allow or discard in prefilter
 
-Normally each span triggers checking of all Condition/Action pairs in the
-sequence (executing all relevant actions). However if for a particular set
-of conditions it is not necessary, the break action can be used. When
-this is found in an Action list then all actions in the current list are
-executed and no further Condition/Action pairs are checked.
+Pre-filter actions can be (next to snapshot_count) the atoms ```allow```
+or ```discard```. When a span is discarded, it is marked as inactive and
+the different APIs do their best to ignore it with as little resource consumption
+as possible, while keeping the API contract (i.e. same instrumentation works
+with active and inactive spans)
 
-```erlang
-    break
-```
 
 #### Filter configuration
 
-The filter rules are configured under **filter_rules**
+The final filter rules are configured under **filter_rules** and the prefilter
+rules in **prefilter_rules**. If filter rules are not defined, the spans are
+discarded, if prefilter rules are not defined, all spans handled as active.
 
-#### Example
+##### Example
 
 example Condition/Action (rule) list:
 
@@ -497,6 +1015,18 @@ example Condition/Action (rule) list:
 
     ]
 ```
+
+##### External filter functions
+
+Both **filter_rules** and **prefilter_rules** configurations can have a
+```{Module, Function, ExtraArgument}``` tuple as value. With this configuration
+```Module:Function(Span :: span(), ExtraArgument)``` will be called and
+expected to return a tupe ```{NewSpan :: span(), Actions :: [action()]}```.
+Any other results are ignored and the span is discarded. The external filter
+can also modify the span. The actions are as described above. Unknown actions
+in the list are ignored. Of course the external filter can do any additional
+actions before returning the result.
+
 
 ### Sending a span to Zipkin
 
@@ -528,24 +1058,8 @@ The default service/host information to be sent to zipkin is provided in
 **zipkin_tag_host_service**, **zipkin_tag_host_ip** and **zipkin_tag_host_port**
 configuration parameters.
 
-It is also possible to add the default service/host information (as specified)
-in the configuration paramers above to each tag/log that does not have it
-explicitly set by setting the **zipkin_add_default_service_to_logs** and
-**zipkin_add_default_service_to_tags** to ```true```. This however can increase
-the amount of data to be sent to zipkin significantly (depending on the
-number of logs/tags) so probably it is not recommended for most uses.
-
-example :
-
-```erlang
-    ...
-    {zipkin_add_default_service_to_logs, false},
-    {zipkin_add_default_service_to_tags, false},
-    ...
-```
-
 Sending the span to Zipkin utilizes the [ibrowse](https://github.com/cmullaparthi/ibrowse)
-http client (which is the only dependency of OTTER).
+http client.
 
 ### Snapshot/Counter
 

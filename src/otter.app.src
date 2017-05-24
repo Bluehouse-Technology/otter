@@ -1,12 +1,13 @@
 {application, otter,
  [{description, "OpenTracing Toolkit for ERlang"},
-  {vsn, "0.2.0"},
+  {vsn, "0.3.0"},
   {registered, [otter_sup, otter_snapshot_count, otter_conn_zipkin]},
   {mod, { otter_app, []}},
   {applications,
    [kernel,
     stdlib,
-    ibrowse
+    ibrowse,
+    otter_lib
    ]},
   {env,[
     {http_client, ibrowse},
@@ -16,14 +17,10 @@
     {zipkin_tag_host_port, 0},
     {zipkin_tag_host_service, "otter_test"},
     {zipkin_add_host_tag_to_span, {"lc", ""}},
-    {zipkin_add_default_service_to_logs, false},
-    {zipkin_add_default_service_to_tags, false},
-    {server_zipkin_callback, {otter_server_span_cb, handle}},
-    {server_zipkin_port, 19411},
     {filter_rules, [
         {
             [
-                {greater, otter_span_duration, 1000}
+                {greater, otter_span_duration, 1000000}
             ],
             [
                 {snapshot_count, [long_span], [otter_span_name]}

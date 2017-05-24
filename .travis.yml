@@ -22,4 +22,4 @@ script:
 branches:
   only:
   - master
-  - dev
+  - 0.3.0
