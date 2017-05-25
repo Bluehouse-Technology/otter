@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module otter_span_id_api</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module otter_span_id_api</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   This API uses a separate process to collect information of a span.
+
+
+<h2><a name="description">Description</a></h2>
+   This API uses a separate process to collect information of a span. The
+   idea behind this is to provide a static ID which can be used to refer
+   to the span. This is more convenient to integrate than the basic
+   functional API is not limited by process boundaries as with the process
+   dictionary APIs. The API also supports pre filtering with the
+   start_with_tags functions.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#finish-1">finish/1</a></td><td>Finish the span and pass it to filtering if it is active.</td></tr>
+<tr><td valign="top"><a href="#ids-1">ids/1</a></td><td>Get the trace id and span id from a span.</td></tr>
+<tr><td valign="top"><a href="#log-2">log/2</a></td><td>Add a log to the span.</td></tr>
+<tr><td valign="top"><a href="#log-3">log/3</a></td><td>Add a log to the span with specific service information.</td></tr>
+<tr><td valign="top"><a href="#start-1">start/1</a></td><td>Start a new span collection process.</td></tr>
+<tr><td valign="top"><a href="#start-2">start/2</a></td><td>Start a new span collection process with an existing trace id or
+  parent span.</td></tr>
+<tr><td valign="top"><a href="#start-3">start/3</a></td><td>Start a new span collection process with an existing trace id and
+  parent span id.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-2">start_with_tags/2</a></td><td>Start a new span with a list of tags and pass it to pre filtering.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-3">start_with_tags/3</a></td><td>Start a new span with a list of tags and a trace id or parent span
+  and pass it to pre filtering.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-4">start_with_tags/4</a></td><td>Start a new span with a list of tags, a trace id and parent span id
+  then pass it to pre filtering.</td></tr>
+<tr><td valign="top"><a href="#tag-3">tag/3</a></td><td>Add a tag to the span.</td></tr>
+<tr><td valign="top"><a href="#tag-4">tag/4</a></td><td>Add a tag to the span with specific service information.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="finish-1">finish/1</a></h3>
+<div class="spec">
+<p><tt>finish(Pid::pid() | undefined) -&gt; ok</tt><br></p>
+</div><p>Finish the span and pass it to filtering if it is active</p>
+
+<h3 class="function"><a name="ids-1">ids/1</a></h3>
+<div class="spec">
+<p><tt>ids(Pid::pid() | undefined) -&gt; {<a href="#type-trace_id">trace_id()</a>, <a href="#type-span_id">span_id()</a>}</tt><br></p>
+</div><p>Get the trace id and span id from a span. If the span is inactive
+  it returns the tuple <code>{0,0}</code></p>
+
+<h3 class="function"><a name="log-2">log/2</a></h3>
+<div class="spec">
+<p><tt>log(Pid::pid() | undefined, Text::<a href="#type-info">info()</a>) -&gt; ok</tt><br></p>
+</div><p>Add a log to the span</p>
+
+<h3 class="function"><a name="log-3">log/3</a></h3>
+<div class="spec">
+<p><tt>log(Pid::pid() | undefined, Text::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; ok</tt><br></p>
+</div><p>Add a log to the span with specific service information</p>
+
+<h3 class="function"><a name="start-1">start/1</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>) -&gt; pid()</tt><br></p>
+</div><p>Start a new span collection process</p>
+
+<h3 class="function"><a name="start-2">start/2</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>, TraceId::<a href="#type-trace_id">trace_id()</a>) -&gt; pid()</tt><br></p>
+</div><p>Start a new span collection process with an existing trace id or
+  parent span</p>
+
+<h3 class="function"><a name="start-3">start/3</a></h3>
+<div class="spec">
+<p><tt>start(Name::<a href="#type-info">info()</a>, TraceId::<a href="#type-trace_id">trace_id()</a>, ParentId::integer()) -&gt; pid()</tt><br></p>
+</div><p>Start a new span collection process with an existing trace id and
+  parent span id</p>
+
+<h3 class="function"><a name="start_with_tags-2">start_with_tags/2</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name::<a href="#type-info">info()</a>, Tags::[<a href="#type-tag">tag()</a>]) -&gt; pid() | undefined</tt><br></p>
+</div><p>Start a new span with a list of tags and pass it to pre filtering.
+  If the span is active then start a span collection process. For inactive
+  span the atom <code>undefined</code> is returned instead of the PID.</p>
+
+<h3 class="function"><a name="start_with_tags-3">start_with_tags/3</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name::<a href="#type-info">info()</a>, Tags::[<a href="#type-tag">tag()</a>], TraceId::<a href="#type-trace_id">trace_id()</a>) -&gt; pid() | undefined</tt><br></p>
+</div><p>Start a new span with a list of tags and a trace id or parent span
+  and pass it to pre filtering.
+  If the span is active then start a span collection process. For inactive
+  span the atom <code>undefined</code> is returned instead of the PID.</p>
+
+<h3 class="function"><a name="start_with_tags-4">start_with_tags/4</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name::<a href="#type-info">info()</a>, Tags::[<a href="#type-tag">tag()</a>], TraceId::<a href="#type-trace_id">trace_id()</a>, ParentId::<a href="#type-span_id">span_id()</a>) -&gt; pid() | undefined</tt><br></p>
+</div><p>Start a new span with a list of tags, a trace id and parent span id
+  then pass it to pre filtering.
+  If the span is active then start a span collection process. For inactive
+  span the atom <code>undefined</code> is returned instead of the PID.</p>
+
+<h3 class="function"><a name="tag-3">tag/3</a></h3>
+<div class="spec">
+<p><tt>tag(Pid::pid() | undefined, Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>) -&gt; ok</tt><br></p>
+</div><p>Add a tag to the span</p>
+
+<h3 class="function"><a name="tag-4">tag/4</a></h3>
+<div class="spec">
+<p><tt>tag(Pid::pid() | undefined, Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; ok</tt><br></p>
+</div><p>Add a tag to the span with specific service information</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, May 26 2017, 00:59:16.</i></p>
+</body>
+</html>

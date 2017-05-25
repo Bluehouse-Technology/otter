@@ -1127,38 +1127,6 @@ example:
     -spec counter_delete_all() -> ok.
 ```
 
-### Built in HTTP/Thrift (zipkin protocol) server
-
-OTTER has a HTTP/Thrift server that understands the Zipkin binary protocol.
-Originally was intended for testing purposes, but probably it can be generally
-useful to write own trace collector, or custom correlator for instrumented
-services.
-
-The server is started up during otter application start if the
-**server_zipkin_callback** configuration parameter is set to a ```{Module, Function}```
-tuple. The listening port can be specified with **server_zipkin_port** and
-defaults to 9411 if not defined. When spans are received on the server,
-they are decoded to otter ```#span{}``` record and individually handed to
-the specified callback. There is a stub/example callback module (otter_server_span_cb.erl)
-in the application. All the string types in the span are decoded to ```binary()```
-types. i.e. it is not completely symmetrical with the encoder functions. While the
-encoder is "forgiving" when it comes to log text, tag key/values and other
-string parameters by accepting ```atom() | binary() | list() | integer()```
-for convenience, obviously the decoder can not guess these.
-
-The spans can be submitted to any URI path. The path is ignored by the
-server and the server always responds with HTTP response code 202 in the
-current implementation.
-
-Example server configuration
-
-```erlang
-    ...
-    {server_zipkin_callback, {otter_server_span_cb, handle}},
-    {server_zipkin_port, 19411},
-    ...
-```
-
 ## OTTER Configuration
 
 The OTTER application configuration is handled through the otter_config
@@ -1175,10 +1143,6 @@ otter.app.src file.
     {zipkin_tag_host_port, 0},
     {zipkin_tag_host_service, "otter_test"},
     {zipkin_add_host_tag_to_span, {"lc", ""}},
-    {zipkin_add_default_service_to_logs, false},
-    {zipkin_add_default_service_to_tags, false},
-    {server_zipkin_callback, {otter_server_span_cb, handle}},
-    {server_zipkin_port, 19411},
     {filter_rules, [
         {
             [

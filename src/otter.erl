@@ -130,8 +130,8 @@ start(Name, TraceId) when is_integer(TraceId) ->
     otter_lib_span:start(Name, TraceId).
 
 %%--------------------------------------------------------------------
-%% @doc Starts a child span with the specified name, TraceId and
-%% ParentId
+%% @doc Starts a child span with the specified name, trace id and
+%% parent id
 %% @end
 %% --------------------------------------------------------------------
 -spec start(Name :: info(), TraceId :: integer(), ParentId :: integer()) -> span().
@@ -161,19 +161,15 @@ start_with_tags(Name, Tags, #span{trace_id = TraceId, id = ParentId}) ->
     Span = otter_lib_span:start_with_tags(Name, Tags, TraceId, ParentId),
     otter_filter:pre_span(Span);
 
-%%--------------------------------------------------------------------
-%% @doc Starts a span with the specified name and TraceId or name and
-%% ParentSpan
-%% @end
-%% --------------------------------------------------------------------
+
 start_with_tags(Name, Tags, TraceId) when is_integer(TraceId) ->
     Span = otter_lib_span:start_with_tags(Name, Tags, TraceId),
     otter_filter:pre_span(Span).
 
 
 %%--------------------------------------------------------------------
-%% @doc Starts a child span with the specified name, TraceId and
-%% ParentId
+%% @doc Starts a child span with the specified name, trace id and
+%% parent id
 %% @end
 %% --------------------------------------------------------------------
 -spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> span().
