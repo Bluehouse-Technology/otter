@@ -14,18 +14,37 @@
 
 
 <h2><a name="description">Description</a></h2><p>otter API module. Use the API in this module to interact with
-   the <code>otter</code> application. If you want to specifically use the
-   process dictionary API, use the <code>otter_pdict_api</code> module instead.
-   The API is broken down into 3 sections. The <code>Span API</code>,
-   <code>Snapshot/Count API</code> and <code>Config API</code>.</p>
+   the <code>otter</code> application.</p>
   
-   <h3><a name="Span_API">Span API</a></h3><p>
+   <p>The module covers 3 APIs. The <code>Span API</code>, <code>Snapshot/Count API</code> and
+   <code>Config API</code>.</p>
+  
+   <h3><a name="Span_API">Span API</a></h3>
+  
+   <p>The module exposes the functional span API.
    These API calls allow you to create and manage spans. These are:<br>
    <code>start/1, start/2, start/3</code><br>
+   <code>start_with_tags/2, start_with_tags/3, start_with_tags/4</code><br>
    <code>finish/1</code> <br>
    <code>ids/1</code> <br>
    <code>log/2, log/3</code> <br>
    <code>tag/3, tag/4</code> <br></p>
+  
+   <p>The API supports pre-filtering of spans with the start_with_tags   
+functions. Pre-filtering is invoked when the span is started with   
+initial tags. The result of the pre filter rules can be an inactive   
+span. Inactive spans do not trigger the rules when finishing the span   
+(i.e. always discarded) and consume somewhat less resources (depending   
+on the API) than gathering active spans.</p>
+  
+   <p>There are additional span APIs developed for specific use cases to
+   simplify instrumentations for different code bases. These
+   are accessible in separate modules.
+   - simple process dictionary API     : <code>otter_span_pdict_api</code> <br>
+   - multi span process dictionary API : <code>otter_span_mpdict_api</code> <br>
+   - span id/process API               : <code>otter_span_id_api</code> <br>   
+For further information on these APIs, check the documentation of the   
+modules</p>
   
    <h3><a name="Snapshot/Count_API">Snapshot/Count API</a></h3><p>
    When <code>finish/1</code> is called then the completed span is
@@ -52,29 +71,34 @@
    environment, so the write function is NOT persistent. In case of node
    restart and/or application reload the configuration will be reset to
    whatever environment is defined in the release (sys) config or app
-   file. There is an example configuration provided in the <code>otter.app</code>
-   file as a reference. These are:<br>
-   <code>config_list/0</code><br>
+   file. There is an example configuration provided in the <code>otter.app`
+   file as a reference. These are:&lt;br/&gt;
+   `config_list/0</code><br>
    <code>config_read/1</code><br>
    <code>config_read/2</code><br>
    <code>config_write/2</code><br>
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#config_list-0">config_list/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#config_read-1">config_read/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#config_read-2">config_read/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#config_write-2">config_write/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#counter_delete-1">counter_delete/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#counter_delete_all-0">counter_delete_all/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#counter_list-0">counter_list/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#counter_snapshot-1">counter_snapshot/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#finish-1">finish/1</a></td><td>Ends a span and prepares it for potential delivery to the
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#config_list-0">config_list/0</a></td><td>List all defined configuration.</td></tr>
+<tr><td valign="top"><a href="#config_read-1">config_read/1</a></td><td>Read a configuration value.</td></tr>
+<tr><td valign="top"><a href="#config_read-2">config_read/2</a></td><td>Read a configuration value with default.</td></tr>
+<tr><td valign="top"><a href="#config_write-2">config_write/2</a></td><td>Write a configuration value.</td></tr>
+<tr><td valign="top"><a href="#counter_delete-1">counter_delete/1</a></td><td>Delete (reset) a counter.</td></tr>
+<tr><td valign="top"><a href="#counter_delete_all-0">counter_delete_all/0</a></td><td>Delete (reset) all counters.</td></tr>
+<tr><td valign="top"><a href="#counter_list-0">counter_list/0</a></td><td>List all the snapshot counters.</td></tr>
+<tr><td valign="top"><a href="#counter_snapshot-1">counter_snapshot/1</a></td><td>Show the last event snapshot of a counter.</td></tr>
+<tr><td valign="top"><a href="#finish-1">finish/1</a></td><td>Ends an active span and prepares it for potential delivery to the
   backend based on filtering rules.</td></tr>
-<tr><td valign="top"><a href="#ids-1">ids/1</a></td><td>Returns the TraceId and SpanId for a given span.</td></tr>
+<tr><td valign="top"><a href="#ids-1">ids/1</a></td><td>Returns the trace id and span id for a given span.</td></tr>
 <tr><td valign="top"><a href="#log-2">log/2</a></td><td>Adds a log message to a span.</td></tr>
-<tr><td valign="top"><a href="#log-3">log/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#log-3">log/3</a></td><td>Adds a log message to a span with the specified service information.</td></tr>
 <tr><td valign="top"><a href="#start-1">start/1</a></td><td>Starts a span with the specified name.</td></tr>
-<tr><td valign="top"><a href="#start-2">start/2</a></td><td>Starts a span with the specified name and TraceId.</td></tr>
+<tr><td valign="top"><a href="#start-2">start/2</a></td><td>Starts a span with the specified name and parent span or a trace id.</td></tr>
 <tr><td valign="top"><a href="#start-3">start/3</a></td><td>Starts a child span with the specified name, TraceId and
+  ParentId.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-2">start_with_tags/2</a></td><td>Starts a span with the specified name and initial tags.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-3">start_with_tags/3</a></td><td>Starts a span with the specified name, initial tags and
+  trace id or a parent span.</td></tr>
+<tr><td valign="top"><a href="#start_with_tags-4">start_with_tags/4</a></td><td>Starts a child span with the specified name, TraceId and
   ParentId.</td></tr>
 <tr><td valign="top"><a href="#tag-3">tag/3</a></td><td>Adds a tag to a span.</td></tr>
 <tr><td valign="top"><a href="#tag-4">tag/4</a></td><td>Adds a tag to a span with a given service.</td></tr>
@@ -85,74 +109,79 @@
 <h3 class="function"><a name="config_list-0">config_list/0</a></h3>
 <div class="spec">
 <p><tt>config_list() -&gt; term()</tt><br></p>
-</div>
+</div><p>List all defined configuration</p>
 
 <h3 class="function"><a name="config_read-1">config_read/1</a></h3>
 <div class="spec">
 <p><tt>config_read(Key::atom()) -&gt; term()</tt><br></p>
-</div>
+</div><p>Read a configuration value</p>
 
 <h3 class="function"><a name="config_read-2">config_read/2</a></h3>
 <div class="spec">
 <p><tt>config_read(Key::atom(), Default::term()) -&gt; term()</tt><br></p>
-</div>
+</div><p>Read a configuration value with default</p>
 
 <h3 class="function"><a name="config_write-2">config_write/2</a></h3>
 <div class="spec">
 <p><tt>config_write(Key::atom(), Value::term()) -&gt; ok</tt><br></p>
-</div>
+</div><p>Write a configuration value.
+  Note : With the default config implementation this write is not
+  persistent. Update the application environment/config accordingly to
+  persist.</p>
 
 <h3 class="function"><a name="counter_delete-1">counter_delete/1</a></h3>
 <div class="spec">
-<p><tt>counter_delete(Key::list()) -&gt; ok</tt><br></p>
-</div>
+<p><tt>counter_delete(Key::term()) -&gt; ok</tt><br></p>
+</div><p>Delete (reset) a counter</p>
 
 <h3 class="function"><a name="counter_delete_all-0">counter_delete_all/0</a></h3>
 <div class="spec">
 <p><tt>counter_delete_all() -&gt; ok</tt><br></p>
-</div>
+</div><p>Delete (reset) all counters</p>
 
 <h3 class="function"><a name="counter_list-0">counter_list/0</a></h3>
 <div class="spec">
-<p><tt>counter_list() -&gt; [{list(), integer()}]</tt><br></p>
-</div>
+<p><tt>counter_list() -&gt; [{term(), integer()}]</tt><br></p>
+</div><p>List all the snapshot counters</p>
 
 <h3 class="function"><a name="counter_snapshot-1">counter_snapshot/1</a></h3>
 <div class="spec">
-<p><tt>counter_snapshot(Key::list()) -&gt; term()</tt><br></p>
-</div>
+<p><tt>counter_snapshot(Key::term()) -&gt; term()</tt><br></p>
+</div><p>Show the last event snapshot of a counter</p>
 
 <h3 class="function"><a name="finish-1">finish/1</a></h3>
 <div class="spec">
 <p><tt>finish(Span::<a href="#type-span">span()</a>) -&gt; ok</tt><br></p>
-</div><p>Ends a span and prepares it for potential delivery to the
-  backend based on filtering rules</p>
+</div><p>Ends an active span and prepares it for potential delivery to the
+  backend based on filtering rules.</p>
 
 <h3 class="function"><a name="ids-1">ids/1</a></h3>
 <div class="spec">
 <p><tt>ids(Span::<a href="#type-span">span()</a>) -&gt; {<a href="#type-trace_id">trace_id()</a>, <a href="#type-span_id">span_id()</a>}</tt><br></p>
-</div><p>Returns the TraceId and SpanId for a given span.</p>
+</div><p>Returns the trace id and span id for a given span.</p>
 
 <h3 class="function"><a name="log-2">log/2</a></h3>
 <div class="spec">
 <p><tt>log(Span::<a href="#type-span">span()</a>, Text::<a href="#type-info">info()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
-</div><p>Adds a log message to a span</p>
+</div><p>Adds a log message to a span.  If the span is not active,
+  the tag is not added.</p>
 
 <h3 class="function"><a name="log-3">log/3</a></h3>
 <div class="spec">
 <p><tt>log(Span::<a href="#type-span">span()</a>, Text::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
-</div>
+</div><p>Adds a log message to a span with the specified service information.
+  If the span is not active, the tag is not added.</p>
 
 <h3 class="function"><a name="start-1">start/1</a></h3>
 <div class="spec">
 <p><tt>start(Name::<a href="#type-info">info()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
 </div><p>Starts a span with the specified name. Automatically generates
-  a TraceId.</p>
+  a trace id.</p>
 
 <h3 class="function"><a name="start-2">start/2</a></h3>
 <div class="spec">
-<p><tt>start(Name::<a href="#type-info">info()</a>, TraceId::integer()) -&gt; <a href="#type-span">span()</a></tt><br></p>
-</div><p>Starts a span with the specified name and TraceId</p>
+<p><tt>start(Name::<a href="#type-info">info()</a>, ParentSpan::<a href="#type-span">span()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div><p>Starts a span with the specified name and parent span or a trace id</p>
 
 <h3 class="function"><a name="start-3">start/3</a></h3>
 <div class="spec">
@@ -160,20 +189,38 @@
 </div><p>Starts a child span with the specified name, TraceId and
   ParentId</p>
 
+<h3 class="function"><a name="start_with_tags-2">start_with_tags/2</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name, Tags) -&gt; any()</tt></p>
+</div><p>Starts a span with the specified name and initial tags.
+  Automatically generates a trace id and invokes pre filtering.</p>
+
+<h3 class="function"><a name="start_with_tags-3">start_with_tags/3</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name::<a href="#type-info">info()</a>, Tags::[<a href="#type-tag">tag()</a>], Span::<a href="#type-span">span()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div><p>Starts a span with the specified name, initial tags and
+  trace id or a parent span</p>
+
+<h3 class="function"><a name="start_with_tags-4">start_with_tags/4</a></h3>
+<div class="spec">
+<p><tt>start_with_tags(Name::<a href="#type-info">info()</a>, Tags::[<a href="#type-tag">tag()</a>], TraceId::<a href="#type-trace_id">trace_id()</a>, ParentId::<a href="#type-span_id">span_id()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
+</div><p>Starts a child span with the specified name, TraceId and
+  ParentId</p>
+
 <h3 class="function"><a name="tag-3">tag/3</a></h3>
 <div class="spec">
 <p><tt>tag(Span::<a href="#type-span">span()</a>, Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
 </div><p>Adds a tag to a span. If the tag already exists, its value
-  will be overwritten</p>
+  will be overwritten.</p>
 
 <h3 class="function"><a name="tag-4">tag/4</a></h3>
 <div class="spec">
 <p><tt>tag(Span::<a href="#type-span">span()</a>, Key::<a href="#type-info">info()</a>, Value::<a href="#type-info">info()</a>, Service::<a href="#type-service">service()</a>) -&gt; <a href="#type-span">span()</a></tt><br></p>
 </div><p>Adds a tag to a span with a given service. If the tag already
-  exists, its value will be overwritten</p>
+  exists, its value will be overwritten.</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Apr 14 2017, 04:05:41.</i></p>
+<p><i>Generated by EDoc, May 25 2017, 07:13:54.</i></p>
 </body>
 </html>
