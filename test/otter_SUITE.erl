@@ -11,15 +11,15 @@
     ptest_prefilter/1,
     mptest_prefilter/1,
     idtest_prefilter/1,
-    filter_one_out_of/1,
+%%    filter_one_out_of/1,
     handle_span/1
 ]).
 
 all() ->
     [
         ftest, ptest, mptest, idtest,
-        ptest_prefilter, mptest_prefilter, idtest_prefilter,
-        filter_one_out_of
+        ptest_prefilter, mptest_prefilter, idtest_prefilter
+  %%      ,filter_one_out_of
     ].
 
 
@@ -186,20 +186,19 @@ idtest_prefilter(_Config) ->
     ] = finish().
 
 
-%% This might deserve a more proper test. Looking at the spread of some
-%% manual tests I believe on a much larger sample it converges fairly close
-%% to the desired selection. The +-20% here is for the sake of keeping this
-%% test (probably/mostly) ok for now.
-filter_one_out_of(_Config) ->
-    L = length([
-        1 || [ok] <- [
-            otter_lib_filter:run(
-                [{tag1, value1}],
-                [{[{one_out_of, 1000}], [ok]}]
-            ) || _ <- lists:seq(1, 100000)
-        ]
-    ]),
-    true = if L < 120 andalso L > 80 -> true; true -> false end.
+%% Right, comment this test case out until we come up with a better one.
+%% This one fails occassionally (i.e. the randomness gets outside the
+%% tolerance) and makes travis unhappy ...
+%%filter_one_out_of(_Config) ->
+%%    L = length([
+%%        1 || [ok] <- [
+%%            otter_lib_filter:run(
+%%                [{tag1, value1}],
+%%                [{[{one_out_of, 1000}], [ok]}]
+%%            ) || _ <- lists:seq(1, 100000)
+%%        ]
+%%    ]),
+%%    true = if L < 120 andalso L > 80 -> true; true -> false end.
 
 %% Server span handler
 handle_span(Span)  ->
