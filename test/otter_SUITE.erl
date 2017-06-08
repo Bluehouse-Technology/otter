@@ -23,7 +23,10 @@ init_per_suite(Config) ->
     ets_start(),
     application:ensure_all_started(otter),
     application:ensure_all_started(ibrowse),
-    application:ensure_all_started(hackney),
+    %% skipping hackney from these tests as it requires 18+ OTP, it can
+    %% be used of course but it'll reduce backward compatibility and travis
+    %% tests otter with the other clients from R16.
+    %% application:ensure_all_started(hackney),
     application:ensure_all_started(otter_srv),
     otter_config:write(zipkin_collector_uri, "http://127.0.0.1:19411/api/v1/spans"),
     otter_srv_config:write(server_zipkin_callback, {?MODULE, handle_span}),

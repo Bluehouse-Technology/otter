@@ -13,7 +13,6 @@ shell:
 ct:
 	@${REBAR} ct --sys_config test/test_httpc.config
 	@${REBAR} ct --sys_config test/test_ibrowse.config
-	@${REBAR} ct --sys_config test/test_hackney.config
 	@${REBAR} ct --sys_config test/test_custom_cb.config
 
 test: ct
