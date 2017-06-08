@@ -36,7 +36,7 @@
     tag/3, tag/4
 ]).
 
--include_lib("otter_lib/src/otter.hrl").
+-include_lib("otter_lib/include/otter.hrl").
 
 %%----------------------------------------------------------------------
 %% @doc Start a new span collection process

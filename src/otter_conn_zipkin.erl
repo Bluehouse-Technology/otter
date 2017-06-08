@@ -103,7 +103,7 @@ send_batch_to_zipkin(ZipkinURL, Spans) ->
     send_spans_http(ZipkinURL, Data).
 
 send_spans_http(ZipkinURL, Data) ->
-    send_spans_http(otter_config:read(http_client, ibrowse), ZipkinURL, Data).
+    send_spans_http(otter_config:read(http_client, httpc), ZipkinURL, Data).
 
 send_spans_http(ibrowse, ZipkinURL, Data) ->
     case ibrowse:send_req(
@@ -123,4 +123,19 @@ send_spans_http(httpc, ZipkinURL, Data) ->
         {ok, SCode};
     Err ->
         Err
-    end.
+    end;
+send_spans_http(hackney, ZipkinURL, Data) ->
+    case hackney:request(
+        post,
+        ZipkinURL,
+        [{<<"content-type">>, <<"application/x-thrift">>}],
+        Data,
+        [{pool, default}])
+    of
+        {ok, SCode, _, _} ->
+            {ok, SCode};
+        Err ->
+            Err
+    end;
+send_spans_http({Module, Function}, ZipkinURL, Data) ->
+    Module:Function(ZipkinURL, Data).

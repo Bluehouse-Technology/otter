@@ -85,7 +85,7 @@
 %%%-------------------------------------------------------------------
 
 -module(otter).
--include_lib("otter_lib/src/otter.hrl").
+-include_lib("otter_lib/include/otter.hrl").
 
 -export([
          %% Span API

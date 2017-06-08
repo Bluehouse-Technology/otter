@@ -1,7 +1,7 @@
 -module(otter_filter).
 -export([span/1, pre_span/1]).
 
--include_lib("otter_lib/src/otter.hrl").
+-include_lib("otter_lib/include/otter.hrl").
 
 %%----------------------------------------------------------------------
 %% @doc Invoke the span filter on active span

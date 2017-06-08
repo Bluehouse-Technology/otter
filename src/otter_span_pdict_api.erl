@@ -40,7 +40,7 @@
          tag/2, tag/3
         ]).
 
--include_lib("otter_lib/src/otter.hrl").
+-include_lib("otter_lib/include/otter.hrl").
 
 %%----------------------------------------------------------------------
 %% @doc start a new span on the process dictionary of the current process
