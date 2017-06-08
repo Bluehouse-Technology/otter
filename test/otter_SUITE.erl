@@ -10,6 +10,7 @@
     ftest/1,
     mptest/1,
     idtest/1,
+    test_start_with_tags/1,
     ptest_prefilter/1,
     mptest_prefilter/1,
     idtest_prefilter/1,
@@ -38,6 +39,7 @@ end_per_suite(_) ->
 all() ->
     [
         ftest, ptest, mptest, idtest,
+        test_start_with_tags,
         ptest_prefilter, mptest_prefilter, idtest_prefilter
   %%      ,filter_one_out_of
     ].
@@ -165,6 +167,49 @@ ftest(_Config) ->
             tags = [
                 {<<"lc">>,<<>>,{<<"otter_test">>,{127,0,0,1},0}},
                 {<<"result">>, <<"ok">>}
+            ]
+        }
+    ] = finish().
+
+test_start_with_tags(_Config) ->
+    otter:finish(
+       otter:start_with_tags("test_span", [{"initial_tag", "true"}])),
+    [
+        #span{
+            name = <<"test_span">>,
+            logs = [],
+            tags = [
+                {<<"lc">>,<<>>,{<<"otter_test">>,{127,0,0,1},0}},
+                {<<"initial_tag">>, <<"true">>}
+            ]
+        }
+    ] = finish(),
+
+    otter:finish(
+       otter:start_with_tags("test_span2", [{"initial_tag", "true"}], 123)),
+    [
+        #span{
+            name = <<"test_span2">>,
+            trace_id = 123,
+            logs = [],
+            tags = [
+                {<<"lc">>,<<>>,{<<"otter_test">>,{127,0,0,1},0}},
+                {<<"initial_tag">>, <<"true">>}
+            ]
+        }
+    ] = finish(),
+
+    otter:finish(
+       otter:start_with_tags("test_span3", [{"initial_tag", "true"}], 123, 321)),
+    [
+        #span{
+            name = <<"test_span3">>,
+            trace_id = 123,
+            parent_id = 321,
+            logs = [],
+            tags = [
+                {<<"lc">>,<<>>,{<<"otter_test">>,{127,0,0,1},0}},
+                {<<"initial_tag">>, <<"true">>}
             ]
         }
     ] = finish().
