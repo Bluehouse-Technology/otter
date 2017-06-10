@@ -147,7 +147,7 @@ start(Name, TraceId, ParentId) when is_integer(TraceId),
 %%--------------------------------------------------------------------
 %% TODO Figure out why dialyzer doesn't like this spec : -spec start_with_tags(Name :: info(), Tags :: [tag()]) -> span().
 start_with_tags(Name, Tags) ->
-    Span = otter_lib_span:start(Name, Tags),
+    Span = otter_lib_span:start_with_tags(Name, Tags),
     otter_filter:pre_span(Span).
 
 %%--------------------------------------------------------------------
