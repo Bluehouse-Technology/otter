@@ -143,7 +143,7 @@ purely functional and could/should be used as a base for other APIs.
 Start span with name only. Name should refer e.g. to the interface.
 
 ```erlang
-spec start(Name :: info()) -> span().
+-spec start(Name :: info()) -> span().
 ```
 
 Start span with name and a parent span, the trace id and the parent span.
@@ -197,11 +197,11 @@ pre-filtering.
 
 ```
 
-Start a span with name, initial tags and a trace id. This function triggers
-pre-filtering.
+Start a span with name, initial tags and a trace id and a parent span id.
+This function triggers pre-filtering.
 
 ```erlang
--spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> span().
 
 ```
 
@@ -348,12 +348,11 @@ pre-filtering.
 
 ```
 
-Start a span with name, initial tags and a trace id. This function triggers
-pre-filtering.
-
+Start a span with name, initial tags and a trace id and a parent span id.
+This function triggers pre-filtering.
 
 ```erlang
--spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id()) -> span().
+-spec start_with_tags(Name :: info(), Tags :: [tag()], TraceId :: trace_id(), ParentId :: span_id()) -> span().
 
 ```
 
