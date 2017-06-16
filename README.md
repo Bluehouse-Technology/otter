@@ -1016,12 +1016,12 @@ example Condition/Action (rule) list:
         {
             %% Condition
             [
-                {greater, "otter_span_duration", 5000000},
-                {value, "otter_span_name", "radius request"}
+                {greater, otter_span_duration, 5000000},
+                {value, otter_span_name, "radius request"}
             ],
             %% Action
             [
-                {snap_count, [long_radius_request], []},
+                {snapshot_count, [long_radius_request], []},
                 send_to_zipkin
             ]
         },
@@ -1032,7 +1032,7 @@ example Condition/Action (rule) list:
             ],
             %% Action
             [
-                {snap_count, [request], ["otter_span_name", "final_result"]}
+                {snapshot_count, [request], [otter_span_name, final_result]}
             ]
         }
 
@@ -1107,8 +1107,8 @@ return HTTP result code 202 in success case.
 
 ### Snapshot/Counter
 
-As a result of the filter snap_count action, 2 ETS tables are used to
-count events (see snap_count action above) and in the same time store
+As a result of the filter snapshot_count action, 2 ETS tables are used to
+count events (see snapshot_count action above) and in the same time store
 the last span information that has increased the counter. This can be
 considered a useful and fairly cheap troubleshooting tool.
 
