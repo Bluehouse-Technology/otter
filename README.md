@@ -8,8 +8,7 @@ OpenTracing Toolkit for ERlang
 
 ## Build
 
-OTTER uses [rebar3](http://www.rebar3.org) as build tool. It can be built
-with:
+OTTER uses [rebar3](http://www.rebar3.org) as build tool.
 
 ```
     rebar3 compile
@@ -20,13 +19,22 @@ environment.
 
 ## Dependencies
 
-[ibrowse](https://github.com/cmullaparthi/ibrowse) HTTP client is used
-to send the HTTP/Thrift requests to Zipkin.
-
-[otter_lib](https://github.com/Bluehouse-Technology/otter_lib) Common
+- [otter_lib](https://github.com/Bluehouse-Technology/otter_lib) Common
 library functions shared for otter and [otter_srv](https://github.com/Bluehouse-Technology/otter_srv)
+- [otter_srv](https://github.com/Bluehouse-Technology/otter_srv) is a common test dependency (i.e. not part of production build)
 
-Test dependency : [otter_srv](https://github.com/Bluehouse-Technology/otter_srv)
+
+In order to avoid external dependencies by default OTTER uses the OTP inets
+HTTP client (httpc) to send spans to the trace collector. However httc has
+a fairly bad reputation in high throughput scenarios. While IMO most of
+these issues have been fixed in the past years, OTTER supports the following
+HTTP clients as well :
+
+- [ibrowse](https://github.com/cmullaparthi/ibrowse)
+- [hackney](https://github.com/benoitc/hackney)
+
+To use these clients they should be available (e.g. as application or release dependency) and
+configured in OTTER (see configuration below).
 
 
 ## OpenTracing
@@ -63,7 +71,10 @@ collector.
 
 The most mature **trace collector** at the time of the initial development
  is [OpenZipkin](http://zipkin.io). OTTER provides an interface to send
-spans to Zipkin using the HTTP/Thrift binary protocol.
+spans to Zipkin using the HTTP/Thrift binary protocol. Since the
+[Jaeger](https://uber.github.io/jaeger/) trace collector also supports the
+Zipkin thrift protocol, it can also be used (thanks to [Yury Gargay](https://github.com/surik)
+for this finding).
 
 The OpenTracing terminology defines information to be passed on across
 systems. The feasibility of this in most cases depends on the protocols
@@ -71,6 +82,18 @@ used, and sometimes rather difficult to achieve. OTTER is not attempting to
 implement any of this functionality. It is possible though to initialize
 a **span** in OTTER with a **trace_id** and **parent_id**, but how these
 id's are passed across the systems is left to the particular implementation.
+
+## OTTER OpenTracing compliance
+
+While OTTER uses the basic concepts of OpenTracing, initially it is not
+intended to be fully compliant. Some of the abstractions and separation of
+functions/components to packages defined in OpenTracing didn't seem
+practical to implement at this stage in Erlang. Other functions (e.g.
+key-value logs, baggages, different type of span references, carrier span
+inject/extract API) are not supported. Either because the trace collector
+protocol OTTER initially supports (Zipkin thrift) does not support them, or
+we have not seen a strong use case for these (yet).
+
 
 ## OTTER functionality
 
@@ -85,8 +108,8 @@ occurrence of a span.
 
 ### Producing span information
 
-The main motivation behind the span collection of Otter is to make the
-instrumentation of existing code as simple as possible. Otter includes 4
+The main motivation behind the span collection of OTTER is to make the
+instrumentation of existing code as simple as possible. OTTER includes 4
 different APIs for this.
 
 - Basic functional API
@@ -105,7 +128,7 @@ otter_lib application.
 
 ```erlang
 -type time_us() :: non_neg_integer().               % timestamp in microseconds
--type info()    :: binary() | iolist() | atom() | integer().
+-type info()    :: binary() | iolist() | atom() | integer() | fun().
 -type ip4()     :: {non_neg_integer(), non_neg_integer(), non_neg_integer(), non_neg_integer()}.
 -type service() :: binary() | list() | default | {binary() | list(), ip4(), non_neg_integer()}.
 -type trace_id():: non_neg_integer().
@@ -239,7 +262,7 @@ End span and invoke the span filter (see below)
 
 ```
 
-Get span id's. Return the **trace_id** and the **span** id from the
+Get span id's. Return the **trace_id** and the **span_id** from the
 currently started span. This can be used e.g. when process "boundary" is
 to be passed and eventually new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
@@ -391,7 +414,7 @@ End span and invoke the span filter (see below)
 
 ```
 
-Get span id's. Return the **trace_id** and the **span** id from the
+Get span id's. Return the **trace_id** and the **span_id** from the
 currently started span. This can be used e.g. when process "boundary" is
 to be passed and eventually new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
@@ -551,9 +574,9 @@ End span and invoke the span filter (see below)
 
 ```
 
-Get span id's. Return the **trace_id** and the **span** id from the
+Get span id's. Return the **trace_id** and the **span_id** from the
 currently started span. This can be used e.g. when process "boundary" is
-to be passed and eventually new span needs this information. Also when
+to be passed and eventually a new span needs this information. Also when
 these id's should be passed to a protocol interface for another system
 
 ```erlang
@@ -719,7 +742,7 @@ the span is discarded.
 
 ```
 
-Get span id's. Return the **trace_id** and the **span** id from the span.
+Get span id's. Return the **trace_id** and the **span_id** from the span.
 In case the span is inactive i.e. the Pid is undefined, this function
 returns the tuple ```{0, 0}```.
 
@@ -755,7 +778,7 @@ example :
 #### tag/log information
 
 A note on the tag key/value and log types: the Zipkin interface requires
-string types. The Zipkin connector module (otter_conn_zipkin.erl) attempts
+string types. The Zipkin connector module (otter_conn_zipkin) attempts
 to convert: integer, atom, and iolist types to binary. Unknown data types
 (e.g. record, tuples, or maps) are converted using the "~p" io:fwrite formating
 control character. The resulting string might be hard to read for non-Erlang
@@ -831,8 +854,8 @@ accept ```undefined``` Pid and in that case the action is ignored.
 
 #### Final filtering
 
-When the collection of **span** information is completed (i.e. span_pend
-or span_end/1 is called), filtering is invoked. Filtering is based on the
+When the collection of **span** information is completed (i.e. span finish
+is called), the filtering is invoked. Filtering is based on the
 tags collected in the span with the **span name** and the
 **span duration** added to the key/value pair list with keys :
 **otter_span_name** and **otter_span_duration**. The resulting
@@ -1020,7 +1043,7 @@ example Condition/Action (rule) list:
 Both **filter_rules** and **prefilter_rules** configurations can have a
 ```{Module, Function, ExtraArgument}``` tuple as value. With this configuration
 ```Module:Function(Span :: span(), ExtraArgument)``` will be called and
-expected to return a tupe ```{NewSpan :: span(), Actions :: [action()]}```.
+expected to return a tuple ```{NewSpan :: span(), Actions :: [action()]}```.
 Any other results are ignored and the span is discarded. The external filter
 can also modify the span. The actions are as described above. Unknown actions
 in the list are ignored. Of course the external filter can do any additional
@@ -1036,16 +1059,21 @@ content of this buffer is sent to Zipkin asynchronously in intervals
 configured in **zipkin_batch_interval_ms** (milliseconds).
 
 The URI of the Zipkin trace collector is configured in **zipkin_collector_uri**.
+When [Jaeger](https://uber.github.io/jaeger/) is used then the URL should
+also include **"format=zipkin.thrift"** request parameter. e.g.
 
-Zipkin requires a node entry for every single tag collected in the span.
-This entry contains the service name and IP/Port of the node sending the
-span. If there is no tag/log is produced during span collecion with service/host
-paramer, the Zipkin connector module (otter_conn_zipkin.erl) can be configured
-to add an extra tag to each span during encoding the span by setting the
-**zipkin_add_host_tag_to_span** in the configuration. The value of the
-parameter should  a tuple ```{Key, Value}``` which will be used as the
-default tag information. OpenZipkin uses the "lc" (Local Component) tag
-to display the service for a span.
+```erlang
+    ...
+    {zipkin_collector_uri, "http://127.0.0.1:14268/api/traces?format=zipkin.thrift"},
+    ...
+```
+
+Tags ane logs in Zipkin can have an optional node entry. This entry contains
+the service name and IP/Port of the node sending the span. The Zipkin connector
+module (otter_conn_zipkin.erl) can add an extra tag to each span during
+encoding the span by setting the **zipkin_add_host_tag_to_span** in the
+configuration. The value of the parameter should  a tuple ```{Key, Value}```.
+OpenZipkin uses the "lc" (Local Component) tag to display the service for a span.
 
 example :
 
@@ -1057,8 +1085,23 @@ The default service/host information to be sent to zipkin is provided in
 **zipkin_tag_host_service**, **zipkin_tag_host_ip** and **zipkin_tag_host_port**
 configuration parameters.
 
-Sending the span to Zipkin utilizes the [ibrowse](https://github.com/cmullaparthi/ibrowse)
-http client.
+Sending the span to Zipkin utilizes the configured HTTP client.
+OTTER has support for inets https, ibrowse or hackney. Alternatively a
+callback function can be configured to plug in other http clients.
+
+The configuration to specify the http client is **http_client** which can
+have the vaue of the atoms ```httpc``` (default), ```ibrowse```, ```hackney```
+or the tuple ```{Module, Function}```. Except for httpc the other clients
+should be added to the project dependencies. OTTER does not include them.
+
+
+In case ```{Module, Function}``` is configured then ```Module:Function(ZipkinUrl :: list(), BinaryThriftData :: binary())```
+is called. The callback is expected to return ```{ok, HTTPResultCode :: integer()}```.
+Normally callback should send a HTTP POST request to OpenZipkin or Jaeger setting
+the content type to **application/x-thrift**. Both of these trace collectors
+return HTTP result code 202 in success case.
+
+
 
 ### Snapshot/Counter
 
