@@ -1025,8 +1025,9 @@ example Condition/Action (rule) list:
                 send_to_zipkin
             ]
         },
+        %% Rule counts all requests with name and result
         {
-            %% Condition counts all requests with name and result
+            %% Condition
             [
             ],
             %% Action
@@ -1050,7 +1051,7 @@ in the list are ignored. Of course the external filter can do any additional
 actions before returning the result.
 
 
-### Sending a span to Zipkin
+### Sending a span to Zipkin or Jaeger
 
 As a result of filter action **send_to_zipkin** the span is forwarded to
 the trace collector using HTTP/Thrift binary protocol. In the context of
@@ -1064,6 +1065,7 @@ also include **"format=zipkin.thrift"** request parameter. e.g.
 
 ```erlang
     ...
+    %% example url for sending spans to Jaeger
     {zipkin_collector_uri, "http://127.0.0.1:14268/api/traces?format=zipkin.thrift"},
     ...
 ```
