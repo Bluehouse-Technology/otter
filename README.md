@@ -1066,7 +1066,7 @@ also include **"format=zipkin.thrift"** request parameter. e.g.
 ```erlang
     ...
     %% example url for sending spans to Jaeger
-    {zipkin_collector_uri, "http://127.0.0.1:14268/api/traces?format=zipkin.thrift"},
+    {zipkin_collector_uri, "http://127.0.0.1:14268/api/v1/spans"},
     ...
 ```
 
